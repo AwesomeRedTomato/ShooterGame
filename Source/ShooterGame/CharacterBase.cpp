@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "CharacterBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/SkeletalMeshSocket.h"
@@ -16,10 +13,10 @@ ACharacterBase::ACharacterBase()
 	// Character의 회전이 Controller의 영향을 받지 않음
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
-	bUseControllerRotationYaw = false;
+	bUseControllerRotationYaw = true;
 
 	// Character Movement
-	GetCharacterMovement()->bOrientRotationToMovement = true; // 가속방향과 캐릭터의 방향을 같게함
+	GetCharacterMovement()->bOrientRotationToMovement = false; 
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 340.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 600.0f;
 	GetCharacterMovement()->AirControl = 600.0f;
@@ -29,16 +26,16 @@ ACharacterBase::ACharacterBase()
 	SpringArm->SetupAttachment(GetRootComponent());
 	SpringArm->TargetArmLength = 300.0f;		// 캐릭터와의 거리 = 300.0f
 	SpringArm->bUsePawnControlRotation = true;	// 컨트롤러에 따라 회전
+	SpringArm->SocketOffset = FVector(0.0f, 50.0f, 100.0f);
 
 	// Camera 초기화
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;	// 카메라 회전을 막아놓는다.
-
+	
 	// 회전 속도
 	BaseTurnRate = 45.0f;
 	BaseLookUpRate = 45.0f;
-
 }
 
 // Called when the game starts or when spawned
@@ -118,56 +115,103 @@ void ACharacterBase::FireWeapon()
 	{
 		FTransform SocketTransform = BarrelSocket->GetSocketTransform(GetMesh());
 
+		// 총구 이펙트
 		if (MuzzleFlash)
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SocketTransform);
 		}
+		
+		// 총알 충돌 확인
+		FVector BeamEnd;
+		bool bBeamEnd = GetBeamEndLocation(SocketTransform.GetLocation(), BeamEnd);
 
-		FHitResult FireHit;
-		const FVector Start{ SocketTransform.GetLocation() };
-		const FQuat Rotation{ SocketTransform.GetRotation() };
-		const FVector RotationAxis{ Rotation.GetAxisX() };
-		const FVector End{ Start + RotationAxis * 50'000.0f };
+		if (bBeamEnd)
+		{
+			if (ImpactParticles)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, BeamEnd);
+			}
 
-		FVector BeamEndPoint{ End };
+			UParticleSystemComponent* Beam = 
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticles, SocketTransform);
+			
+			if (Beam)
+			{
+				Beam->SetVectorParameter(FName("Target"), BeamEnd);
+			}
+		}
+
+		// 총 반동 애니메이션
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance && HipFireMontage)
+		{
+			AnimInstance->Montage_Play(HipFireMontage);
+			AnimInstance->Montage_JumpToSection(FName(TEXT("StartFire")));
+		}
+	}
+}
+
+bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation)
+{
+	// 현재 뷰포트 사이즈
+	FVector2D ViewportSize;
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+	}
+
+	// 월드에서의 십자선 위치, 방향
+	FVector2D CrosshairLocation(ViewportSize.X / 2, ViewportSize.Y / 2);
+	FVector CrosshairWorldPosition;
+	FVector CrosshairWorldDirection;
+
+	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
+		UGameplayStatics::GetPlayerController(this, 0),
+		CrosshairLocation,
+		CrosshairWorldPosition,
+		CrosshairWorldDirection);
+
+	// 플레이어 화면 World상의 위치, 방향 얻는데 성공했다면
+	if (bScreenToWorld)
+	{
+		FHitResult ScreenTraceHit;
+		const FVector Start{ CrosshairWorldPosition };
+		const FVector End{ CrosshairWorldPosition + CrosshairWorldDirection * 50000.0f };
+
+		// Beam이 끝나는 시점을 라인 트레이스가 End Point로 설정
+		OutBeamLocation = End;
 
 		GetWorld()->LineTraceSingleByChannel(
-			FireHit,
+			ScreenTraceHit,
 			Start,
 			End,
 			ECollisionChannel::ECC_Visibility);
 
-		if (FireHit.bBlockingHit)
+		// 총알이 물체에 충돌했을 때 해당 지점을 End Point로 설정
+		if (ScreenTraceHit.bBlockingHit)
 		{
-			// Draw Debug
- 
-			//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 2.0f);
-			//DrawDebugPoint(GetWorld(), FireHit.Location, 5.0f, FColor::Red, false, 2.0f);
-
-			BeamEndPoint = FireHit.Location;
-
-			if (ImpactParticles)
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, FireHit.Location);
-			}
+			OutBeamLocation = ScreenTraceHit.Location;
 		}
 
-		if (BeamParticles)
+		// 두번째 충돌 검사
+		FHitResult WeaponTraceHit;
+		const FVector WeaponTraceStart{ MuzzleSocketLocation };
+		const FVector WeaponTraceEnd{ OutBeamLocation };
+
+		GetWorld()->LineTraceSingleByChannel(
+			WeaponTraceHit,
+			WeaponTraceStart,
+			WeaponTraceEnd,
+			ECollisionChannel::ECC_Visibility);
+
+		// 충돌체가 총구와 목표 지점 사이에 있다면
+		if (WeaponTraceHit.bBlockingHit)
 		{
-			UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticles, SocketTransform);
-			if (Beam)
-			{
-				Beam->SetVectorParameter(FName("Target"), BeamEndPoint);
-			}
+			OutBeamLocation = WeaponTraceHit.Location;
 		}
+
+		return true;
 	}
 
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance && HipFireMontage)
-	{
-		AnimInstance->Montage_Play(HipFireMontage);
-		AnimInstance->Montage_JumpToSection(FName(TEXT("StartFire")));
-	}
-
-
+	return false;
 }

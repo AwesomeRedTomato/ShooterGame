@@ -61,7 +61,7 @@ public:
 	void LookUpAtRate(float Rate);
 
 public:
-	/** 랜덤한 sound cue 재생 */
+	/** 랜덤한 Sound Cue 재생 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Combat | Sounds")
 	USoundCue* FireSound;
 
@@ -85,5 +85,7 @@ public:
 	/** Fire Button이 눌렸을 때 호출 */
 	void FireWeapon();
 
+	/** 총알 충돌 지점 */
+	bool GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation);
 
 };

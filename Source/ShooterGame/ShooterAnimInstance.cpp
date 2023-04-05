@@ -26,7 +26,7 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		// 캐릭터가 공중에 떠 있는지 가져옴
 		bIsInAir = ShooterCharacter->GetCharacterMovement()->IsFalling();
 
-		// 캐릭터 가속 유무 가져옴(움직임이 있는 경우 true, 가만히 서있다면 false)
+		// 캐릭터 가속 확인
 		if (Speed > 0.0f)
 		{
 			bIsAccelerating = true;
