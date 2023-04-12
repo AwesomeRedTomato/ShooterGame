@@ -24,8 +24,8 @@ ACharacterBase::ACharacterBase()
 	// SpringArm 초기화
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetRootComponent());
-	SpringArm->TargetArmLength = 300.0f;		// 캐릭터와의 거리 = 300.0f
-	SpringArm->bUsePawnControlRotation = true;	// 컨트롤러에 따라 회전
+	SpringArm->TargetArmLength = 180.0f;		
+	SpringArm->bUsePawnControlRotation = true;
 	SpringArm->SocketOffset = FVector(0.0f, 50.0f, 100.0f);
 
 	// Camera 초기화
@@ -33,9 +33,28 @@ ACharacterBase::ACharacterBase()
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;	// 카메라 회전을 막아놓는다.
 	
-	// 회전 속도
+	// 회전율
 	BaseTurnRate = 45.0f;
 	BaseLookUpRate = 45.0f;
+	
+	// Zoom, Fov
+	bAiming = false;
+	CameraDefaultFov = 0.0f; // BeginPlay에서 값 설정
+	CameraZoomedFov = 35.0f;
+	CameraCurrentFov = 0.0f;
+	ZoomInterpSpeed = 20.0f;
+
+	// 조준/일반 회전율
+	HipTurnRate = 90.0f;
+	HipLookUpRate = 90.0f;
+	AimingTurnRate = 20.0f;
+	AImingLookUpRate = 20.0f;
+
+	// 마우스 감도
+	MouseHipTurnRate = 1.0f;
+	MouseHipLookUpRate = 1.0f;
+	MouseAimingTurnRate = 0.2f;
+	MouseAimingLookUpRate = 0.2f;
 }
 
 // Called when the game starts or when spawned
@@ -43,12 +62,20 @@ void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (Camera)
+	{
+		CameraDefaultFov = GetCamera()->FieldOfView;
+		CameraCurrentFov = CameraDefaultFov;
+	}
 }
 
 // Called every frame
 void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	CameraInterpZoom(DeltaTime);
+	SetLookRates();
 }
 
 // Called to bind functionality to input
@@ -60,6 +87,9 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 	
 	PlayerInputComponent->BindAction("FireButton", EInputEvent::IE_Pressed, this, &ACharacterBase::FireWeapon);
+	
+	PlayerInputComponent->BindAction("AimingButton", EInputEvent::IE_Pressed, this, &ACharacterBase::AimingButtonPressed);
+	PlayerInputComponent->BindAction("AimingButton", EInputEvent::IE_Released, this, &ACharacterBase::AimingButtonReleased);
 
 	// Bind Axis
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterBase::MoveForward);
@@ -67,6 +97,9 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAxis("TurnAtRate", this, &ACharacterBase::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &ACharacterBase::LookUpAtRate);
+
+	PlayerInputComponent->BindAxis("Turn", this, &ACharacterBase::Turn);
+	PlayerInputComponent->BindAxis("LookUp", this, &ACharacterBase::LookUp);
 }
 
 void ACharacterBase::MoveForward(float Value)
@@ -101,6 +134,34 @@ void ACharacterBase::TurnAtRate(float Rate)
 void ACharacterBase::LookUpAtRate(float Rate)
 {
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+}
+
+void ACharacterBase::Turn(float Value)
+{
+	float TurnScaleFactor{};
+	if (bAiming)
+	{
+		TurnScaleFactor = MouseAimingTurnRate;
+	}
+	else
+	{
+		TurnScaleFactor = MouseHipTurnRate;
+	}
+	AddControllerYawInput(Value * TurnScaleFactor);
+}
+
+void ACharacterBase::LookUp(float Value)
+{
+	float LookUpScaleFactor{};
+	if (bAiming)
+	{
+		LookUpScaleFactor = MouseAimingLookUpRate;
+	}
+	else
+	{
+		LookUpScaleFactor = MouseHipLookUpRate;
+	}
+	AddControllerPitchInput(Value * LookUpScaleFactor);
 }
 
 void ACharacterBase::FireWeapon()
@@ -214,4 +275,44 @@ bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVe
 	}
 
 	return false;
+}
+
+void ACharacterBase::AimingButtonPressed()
+{
+	bAiming = true;
+}
+
+void ACharacterBase::AimingButtonReleased()
+{
+	bAiming = false;
+}
+
+void ACharacterBase::CameraInterpZoom(float DeltaTime)
+{
+	// 카메라 Fov 설정
+	if (bAiming)
+	{
+		// 줌 Fov 보간
+		CameraCurrentFov = FMath::FInterpTo(CameraCurrentFov, CameraZoomedFov, DeltaTime, ZoomInterpSpeed);
+	}
+	else
+	{
+		// 줌 해제 Fov 보간
+		CameraCurrentFov = FMath::FInterpTo(CameraCurrentFov, CameraDefaultFov, DeltaTime, ZoomInterpSpeed);
+	}
+	GetCamera()->SetFieldOfView(CameraCurrentFov);
+}
+
+void ACharacterBase::SetLookRates()
+{
+	if (bAiming)
+	{
+		BaseTurnRate = AimingTurnRate;
+		BaseLookUpRate = AImingLookUpRate;
+	}
+	else
+	{
+		BaseTurnRate = HipTurnRate;
+		BaseLookUpRate = HipLookUpRate;
+	}
 }

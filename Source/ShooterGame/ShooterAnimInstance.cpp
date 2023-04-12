@@ -2,6 +2,7 @@
 
 
 #include "ShooterAnimInstance.h"
+#include "Kismet/KismetMathLibrary.h"
 
 void UShooterAnimInstance::NativeInitializeAnimation()
 {
@@ -35,5 +36,18 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		{
 			bIsAccelerating = false;
 		}
+
+		FRotator AimRotation = ShooterCharacter->GetBaseAimRotation();
+		FRotator MovementRotation = UKismetMathLibrary::MakeRotFromX(ShooterCharacter->GetVelocity());
+
+		MovementOffsetYaw = UKismetMathLibrary::NormalizedDeltaRotator(MovementRotation, AimRotation).Yaw;
+
+		// 마지막으로 이동한 방향(Yaw) 설정
+		if (ShooterCharacter->GetVelocity().Size() > 0.0f)
+		{
+			LastMovementOffsetYaw = MovementOffsetYaw;
+		}
+
+		bAiming = ShooterCharacter->GetAiming();
 	}
 }

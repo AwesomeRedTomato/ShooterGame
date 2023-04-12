@@ -36,4 +36,15 @@ public:
 	/** 캐릭터가 가속하는지 체크 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
 	bool bIsAccelerating;
+
+	/** 캐릭터 이동 Yaw 오프셋 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float MovementOffsetYaw;
+
+	/** 정지하기 직전 Offset Yaw */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	float LastMovementOffsetYaw;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
+	bool bAiming;
 };
