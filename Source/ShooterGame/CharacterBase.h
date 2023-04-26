@@ -107,7 +107,7 @@ public:
 	void LookUp(float Value);
 
 public:
-	/** 재생할 랜덤 발포음 */
+	/** 재생할 랜덤 발사음 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Combat")
 	USoundCue* FireSound;
 
@@ -128,7 +128,7 @@ public:
 	UParticleSystem* BeamParticles;
 
 private:
-	/** 줌 여부 */
+	/** 조준 여부 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	bool bAiming;
 
@@ -136,7 +136,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float CameraDefaultFov;
 
-	/** 줌 Fov */
+	/** 조준 감도(조준경 사용 시) Fov */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float CameraZoomedFov;
 
@@ -148,7 +148,7 @@ private:
 	float ZoomInterpSpeed;
 
 public:
-	/** 줌 여부 리턴 */
+	/** 조준 여부 리턴 */
 	FORCEINLINE bool GetAiming() const { return bAiming; }
 
 	/** Fire Button이 눌렸을 때 호출 */
@@ -166,4 +166,45 @@ public:
 
 	/** 적용 감도(BaseTurn, BaseLookUp) 설정 */ 
 	void SetLookRates();
+
+private:
+	/** 십자선 퍼지는 정도 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
+	float CrosshairSpreadMultiplier;
+
+	/** Character Movement 속력에 따른 십자선 퍼짐 정도 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
+	float CrosshairVelocityFactor;
+
+	/** 공중에서의 십자선 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
+	float CrosshairInAirFactor;
+
+	/** 조준경 사용 시 십자선 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
+	float CrosshairAimFactor;
+	
+	/** 총 발사 시 십자선 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
+	float CrosshairShootingFactor;
+
+	float ShootTimeDuration;
+
+	bool bFiringBullet;
+	
+	FTimerHandle CrosshairShootTimer;
+
+public:
+	/** 십자선 퍼지는 정도 계산 */
+	void CalculateCrosshairSpread(float DeltaTime);
+
+	/** Crosshair Spread Multiplier 반환 */
+	UFUNCTION(BlueprintCallable)
+	float GetCrosshairSpreadMultiplier() const;
+
+
+	void StartCrosshairBulletFire();
+
+	UFUNCTION()
+	void FinishCrosshairBulletFire();
 };

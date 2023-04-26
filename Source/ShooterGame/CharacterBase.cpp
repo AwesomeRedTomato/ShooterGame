@@ -55,6 +55,15 @@ ACharacterBase::ACharacterBase()
 	MouseHipLookUpRate = 1.0f;
 	MouseAimingTurnRate = 0.2f;
 	MouseAimingLookUpRate = 0.2f;
+
+	// 십자선
+	CrosshairSpreadMultiplier = 0.0f;
+	CrosshairVelocityFactor = 0.0f;
+	CrosshairInAirFactor = 0.0f;
+	CrosshairAimFactor = 0.0f;
+	CrosshairShootingFactor = 0.0f;
+	bFiringBullet = false;
+	ShootTimeDuration = 0.05f;	
 }
 
 // Called when the game starts or when spawned
@@ -74,8 +83,16 @@ void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// 줌 보간
 	CameraInterpZoom(DeltaTime);
+
+	// 줌/노줌 감도 설정
 	SetLookRates();
+	
+	// 십자선 퍼짐 정도 계산
+	CalculateCrosshairSpread(DeltaTime);
+
+
 }
 
 // Called to bind functionality to input
@@ -210,6 +227,9 @@ void ACharacterBase::FireWeapon()
 			AnimInstance->Montage_JumpToSection(FName(TEXT("StartFire")));
 		}
 	}
+
+	// 발사 시 십자선 반동
+	StartCrosshairBulletFire();
 }
 
 bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation)
@@ -242,11 +262,7 @@ bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVe
 		// Beam이 끝나는 시점을 라인 트레이스가 End Point로 설정
 		OutBeamLocation = End;
 
-		GetWorld()->LineTraceSingleByChannel(
-			ScreenTraceHit,
-			Start,
-			End,
-			ECollisionChannel::ECC_Visibility);
+		GetWorld()->LineTraceSingleByChannel(ScreenTraceHit, Start,	End, ECollisionChannel::ECC_Visibility);
 
 		// 총알이 물체에 충돌했을 때 해당 지점을 End Point로 설정
 		if (ScreenTraceHit.bBlockingHit)
@@ -315,4 +331,71 @@ void ACharacterBase::SetLookRates()
 		BaseTurnRate = HipTurnRate;
 		BaseLookUpRate = HipLookUpRate;
 	}
+}
+
+void ACharacterBase::CalculateCrosshairSpread(float DeltaTime)
+{
+	FVector2D WalkSpeedRange{ 0.0f, GetMovementComponent()->GetMaxSpeed() };
+	FVector2D VelocityMultiplierRange{ 0.0f, 1.0f };
+	FVector Velocity{ GetVelocity() };
+
+	CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
+	
+	// 공중에서의 십자선 퍼짐 정도 계산(점프했을 때 더 벌어짐)
+	if (GetCharacterMovement()->IsFalling())
+	{
+		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 2.25f, DeltaTime, 2.25f);
+	}
+	// 땅에서의 십자선 퍼짐 정도 계산
+	else
+	{
+		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.0f, DeltaTime, 30.0f);
+	}
+
+	// 조준 시 십자선 퍼짐 정도 계산
+	if (bAiming)
+	{
+		CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.5f, DeltaTime, 30.0f);
+	}
+	else
+	{
+		CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor, 0.0f, DeltaTime, 30.0f);
+	}
+
+	if (bFiringBullet)
+	{
+		CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor, 0.3f, DeltaTime, 60.0f);
+	}
+	else
+	{
+		CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor, 0.0f, DeltaTime, 60.0f);
+	}
+	
+	CrosshairSpreadMultiplier = 
+		0.5f + 
+		CrosshairVelocityFactor + 
+		CrosshairInAirFactor - 
+		CrosshairAimFactor + 
+		CrosshairShootingFactor;
+}
+
+float ACharacterBase::GetCrosshairSpreadMultiplier() const
+{
+	return CrosshairSpreadMultiplier;
+}
+
+void ACharacterBase::StartCrosshairBulletFire()
+{
+	bFiringBullet = true;
+
+	GetWorldTimerManager().SetTimer(
+		CrosshairShootTimer, 
+		this, 
+		&ACharacterBase::FinishCrosshairBulletFire, 
+		ShootTimeDuration);
+}
+
+void ACharacterBase::FinishCrosshairBulletFire()
+{
+	bFiringBullet = false;
 }
