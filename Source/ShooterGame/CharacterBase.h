@@ -188,10 +188,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
 	float CrosshairShootingFactor;
 
+	/** 십자선의 총 발사 반동효과 변수들 */
 	float ShootTimeDuration;
-
 	bool bFiringBullet;
-	
 	FTimerHandle CrosshairShootTimer;
 
 public:
@@ -202,9 +201,33 @@ public:
 	UFUNCTION(BlueprintCallable)
 	float GetCrosshairSpreadMultiplier() const;
 
-
+	/** 총 발포 시(LButton Pressed) 십자선 반동 효과 타이머 세팅 */
 	void StartCrosshairBulletFire();
 
+	/** 십자선 반동 효과 타이머 초기화 */
 	UFUNCTION()
 	void FinishCrosshairBulletFire();
+
+public:
+	/** 좌클릭 시 */
+	bool bFireButtonPressed;
+
+	/** True - 발포 가능. False - 발포 타이머가 작동 중 */
+	bool bShouldFire;
+
+	/** 자동 발사 초당 횟수 */
+	float AutomaticFireRate;
+
+	/** 자동 발사 타이머 */
+	FTimerHandle AutoFireTimer;
+
+public:
+	void FireButtonPressed();
+	void FireButtonReleased();
+
+	void StartFireTimer();
+
+	UFUNCTION()
+	void AutoFireReset();
 };
+

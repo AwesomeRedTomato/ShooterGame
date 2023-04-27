@@ -15,7 +15,7 @@ ACharacterBase::ACharacterBase()
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = true;
 
-	// Character Movement
+	// 캐릭터 무브먼트
 	GetCharacterMovement()->bOrientRotationToMovement = false; 
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 340.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 600.0f;
@@ -37,14 +37,14 @@ ACharacterBase::ACharacterBase()
 	BaseTurnRate = 45.0f;
 	BaseLookUpRate = 45.0f;
 	
-	// Zoom, Fov
+	// 조준경 사용/미사용 Fov
 	bAiming = false;
 	CameraDefaultFov = 0.0f; // BeginPlay에서 값 설정
 	CameraZoomedFov = 35.0f;
 	CameraCurrentFov = 0.0f;
 	ZoomInterpSpeed = 20.0f;
 
-	// 조준/일반 회전율
+	// 조준경 사용/미사용 감도
 	HipTurnRate = 90.0f;
 	HipLookUpRate = 90.0f;
 	AimingTurnRate = 20.0f;
@@ -64,6 +64,12 @@ ACharacterBase::ACharacterBase()
 	CrosshairShootingFactor = 0.0f;
 	bFiringBullet = false;
 	ShootTimeDuration = 0.05f;	
+
+	// 자동 발사
+	bFireButtonPressed = false;
+	bShouldFire = true;
+	AutomaticFireRate = 0.1f;
+
 }
 
 // Called when the game starts or when spawned
@@ -103,7 +109,8 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	// Bind Action
 	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &ACharacter::Jump);
 	
-	PlayerInputComponent->BindAction("FireButton", EInputEvent::IE_Pressed, this, &ACharacterBase::FireWeapon);
+	PlayerInputComponent->BindAction("FireButton", EInputEvent::IE_Pressed, this, &ACharacterBase::FireButtonPressed);
+	PlayerInputComponent->BindAction("FireButton", EInputEvent::IE_Released, this, &ACharacterBase::FireButtonReleased);
 	
 	PlayerInputComponent->BindAction("AimingButton", EInputEvent::IE_Pressed, this, &ACharacterBase::AimingButtonPressed);
 	PlayerInputComponent->BindAction("AimingButton", EInputEvent::IE_Released, this, &ACharacterBase::AimingButtonReleased);
@@ -398,4 +405,35 @@ void ACharacterBase::StartCrosshairBulletFire()
 void ACharacterBase::FinishCrosshairBulletFire()
 {
 	bFiringBullet = false;
+}
+
+void ACharacterBase::FireButtonPressed()
+{
+	bFireButtonPressed = true;
+	StartFireTimer();
+}
+
+void ACharacterBase::FireButtonReleased()
+{
+	bFireButtonPressed = false;
+}
+
+void ACharacterBase::StartFireTimer()
+{
+	if (bShouldFire)
+	{
+		FireWeapon();
+		bShouldFire = false;
+
+		GetWorldTimerManager().SetTimer(AutoFireTimer, this, &ACharacterBase::AutoFireReset, AutomaticFireRate);
+	}
+}
+
+void ACharacterBase::AutoFireReset()
+{
+	bShouldFire = true;
+	if (bFireButtonPressed)
+	{
+		StartFireTimer();
+	}
 }
