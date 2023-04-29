@@ -33,7 +33,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
 	bool bIsInAir;
 	
-	/** 캐릭터가 가속하는지 체크 */
+	/** 캐릭터가w 가속하는지 체크 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement")
 	bool bIsAccelerating;
 
