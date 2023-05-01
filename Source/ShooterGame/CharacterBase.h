@@ -208,7 +208,7 @@ public:
 	UFUNCTION()
 	void FinishCrosshairBulletFire();
 
-public:
+private:
 	/** 좌클릭 시 */
 	bool bFireButtonPressed;
 
@@ -229,5 +229,9 @@ public:
 
 	UFUNCTION()
 	void AutoFireReset();
+
+private:
+	/** 아이템 위젯 팝업을 위한 라인 트레이스 */
+	bool TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& OutHitLocation);
 };
 

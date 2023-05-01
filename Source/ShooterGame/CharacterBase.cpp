@@ -3,6 +3,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "DrawDebugHelpers.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "ItemBase.h"
 
 // Sets default values
 ACharacterBase::ACharacterBase()
@@ -70,6 +71,7 @@ ACharacterBase::ACharacterBase()
 	bShouldFire = true;
 	AutomaticFireRate = 0.1f;
 
+	
 }
 
 // Called when the game starts or when spawned
@@ -98,7 +100,22 @@ void ACharacterBase::Tick(float DeltaTime)
 	// 십자선 퍼짐 정도 계산
 	CalculateCrosshairSpread(DeltaTime);
 
+	FHitResult ItemTraceResult;
+	FVector HitLocation;
+	TraceUnderCrosshairs(ItemTraceResult, HitLocation);
 
+	if (ItemTraceResult.bBlockingHit)
+	{
+		AItemBase* HitItem = Cast<AItemBase>(ItemTraceResult.Actor);
+		if (HitItem && HitItem->GetPickupWidget())
+		{
+			// 라인 트레이스에 충돌하면 해당 아이템 위젯 활성화
+			HitItem->GetPickupWidget()->SetVisibility(true);
+		}
+		else
+		{
+		}
+	}
 }
 
 // Called to bind functionality to input
@@ -241,62 +258,39 @@ void ACharacterBase::FireWeapon()
 
 bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation)
 {
-	// 현재 뷰포트 사이즈
-	FVector2D ViewportSize;
-	if (GEngine && GEngine->GameViewport)
+	FHitResult CrosshairHitResult;
+	
+	bool bCrosshairHit = TraceUnderCrosshairs(CrosshairHitResult, OutBeamLocation);
+
+	// 라인 트레이스 충돌 시 해당 위치 설정
+	if (bCrosshairHit)
 	{
-		GEngine->GameViewport->GetViewportSize(ViewportSize);
+		OutBeamLocation = CrosshairHitResult.Location;
+	}
+	// 라인 트레이스가 충돌하지 않았을 때
+	else
+	{
+		// ??
 	}
 
-	// 월드에서의 십자선 위치, 방향
-	FVector2D CrosshairLocation(ViewportSize.X / 2, ViewportSize.Y / 2);
-	FVector CrosshairWorldPosition;
-	FVector CrosshairWorldDirection;
+	// 두번째 충돌 검사(총구 - 목표점)
+	FHitResult WeaponTraceHit;
+	const FVector WeaponTraceStart{ MuzzleSocketLocation };
+	const FVector StartToEnd{ OutBeamLocation - MuzzleSocketLocation };
+	const FVector WeaponTraceEnd{ MuzzleSocketLocation + StartToEnd	* 1.25f };
 
-	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
-		UGameplayStatics::GetPlayerController(this, 0),
-		CrosshairLocation,
-		CrosshairWorldPosition,
-		CrosshairWorldDirection);
+	GetWorld()->LineTraceSingleByChannel(
+		WeaponTraceHit,
+		WeaponTraceStart,
+		WeaponTraceEnd,
+		ECollisionChannel::ECC_Visibility);
 
-	// 플레이어 화면 World상의 위치, 방향 얻는데 성공했다면
-	if (bScreenToWorld)
+	// 충돌체가 총구와 목표 지점 사이에 있다면
+	if (WeaponTraceHit.bBlockingHit)
 	{
-		FHitResult ScreenTraceHit;
-		const FVector Start{ CrosshairWorldPosition };
-		const FVector End{ CrosshairWorldPosition + CrosshairWorldDirection * 50000.0f };
-
-		// Beam이 끝나는 시점을 라인 트레이스가 End Point로 설정
-		OutBeamLocation = End;
-
-		GetWorld()->LineTraceSingleByChannel(ScreenTraceHit, Start,	End, ECollisionChannel::ECC_Visibility);
-
-		// 총알이 물체에 충돌했을 때 해당 지점을 End Point로 설정
-		if (ScreenTraceHit.bBlockingHit)
-		{
-			OutBeamLocation = ScreenTraceHit.Location;
-		}
-
-		// 두번째 충돌 검사
-		FHitResult WeaponTraceHit;
-		const FVector WeaponTraceStart{ MuzzleSocketLocation };
-		const FVector WeaponTraceEnd{ OutBeamLocation };
-
-		GetWorld()->LineTraceSingleByChannel(
-			WeaponTraceHit,
-			WeaponTraceStart,
-			WeaponTraceEnd,
-			ECollisionChannel::ECC_Visibility);
-
-		// 충돌체가 총구와 목표 지점 사이에 있다면
-		if (WeaponTraceHit.bBlockingHit)
-		{
-			OutBeamLocation = WeaponTraceHit.Location;
-		}
-
+		OutBeamLocation = WeaponTraceHit.Location;
 		return true;
 	}
-
 	return false;
 }
 
@@ -436,4 +430,44 @@ void ACharacterBase::AutoFireReset()
 	{
 		StartFireTimer();
 	}
+}
+
+bool ACharacterBase::TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& OutHitLocation)
+{
+	// 현재 뷰포트 사이즈
+	FVector2D ViewportSize;
+	if (GEngine && GEngine->GameViewport)
+	{
+		GEngine->GameViewport->GetViewportSize(ViewportSize);
+	}
+
+	// 월드에서의 십자선 위치, 방향
+	FVector2D CrosshairLocation(ViewportSize.X / 2, ViewportSize.Y / 2);
+	FVector CrosshairWorldPosition;
+	FVector CrosshairWorldDirection;
+
+	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
+		UGameplayStatics::GetPlayerController(this, 0),
+		CrosshairLocation,
+		CrosshairWorldPosition,
+		CrosshairWorldDirection);
+
+	if (bScreenToWorld)
+	{
+		// 에임 - 아이템 트레이스 충돌 체크
+		const FVector Start{CrosshairWorldPosition};
+		const FVector End{ Start + CrosshairWorldDirection * 50'000.0f };
+		GetWorld()->LineTraceSingleByChannel(
+			OutHitResult,
+			Start,
+			End,
+			ECollisionChannel::ECC_Visibility);
+
+		if (OutHitResult.bBlockingHit)
+		{
+			OutHitLocation = OutHitResult.Location;
+			return true;
+		}
+	}
+	return false;
 }
