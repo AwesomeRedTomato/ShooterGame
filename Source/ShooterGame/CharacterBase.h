@@ -8,6 +8,8 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Sound/SoundCue.h"
+#include "ItemBase.h"
+#include "WeaponBase.h"
 #include "CharacterBase.generated.h"
 
 UCLASS()
@@ -194,6 +196,9 @@ private:
 	FTimerHandle CrosshairShootTimer;
 
 public:
+	/** 충돌체 정보와 위치를 반환하는 라인 트레이스 */
+	bool TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& OutHitLocation);
+
 	/** 십자선 퍼지는 정도 계산 */
 	void CalculateCrosshairSpread(float DeltaTime);
 
@@ -212,7 +217,7 @@ private:
 	/** 좌클릭 시 */
 	bool bFireButtonPressed;
 
-	/** True - 발포 가능. False - 발포 타이머가 작동 중 */
+	/** True - 발사 가능. False - 발사 타이머가 작동 중 */
 	bool bShouldFire;
 
 	/** 자동 발사 초당 횟수 */
@@ -222,16 +227,38 @@ private:
 	FTimerHandle AutoFireTimer;
 
 public:
+	/** 발사 버튼 Pressed/Released 시 호출 */
 	void FireButtonPressed();
 	void FireButtonReleased();
 
+	/** 자동 발사 타이머 Start */
 	void StartFireTimer();
 
+	/** 자동 발사 리셋 */
 	UFUNCTION()
 	void AutoFireReset();
 
 private:
-	/** 아이템 위젯 팝업을 위한 라인 트레이스 */
-	bool TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& OutHitLocation);
-};
+	/** 아이템의 AreaSphere 범위에 있다면 Trace 가능(True) */
+	bool bShouldTraceForItems;
 
+	/** Overlap 된 아이템 개수 */
+	int8 OverlappedItemCount;
+
+	/** 마지막으로 트레이스 한 아이템 레퍼런스 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Items", meta = (AllowPrivateAccess = "true"))
+	AItemBase* TraceHitItemLastFrame;
+
+public:
+	/** Overlap 된 아이템 개수 반환 */
+	FORCEINLINE int8 GetOverlappedItemCount() const { return OverlappedItemCount; }
+
+	/** Overlap 된 항목의 추가/삭제 */
+	void IncrementOverlappedItemCount(int8 Amount);
+
+	/** 아이템 트레이스 */
+	void TraceForItems();
+
+private:
+
+};

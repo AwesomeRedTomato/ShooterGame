@@ -3,7 +3,6 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "DrawDebugHelpers.h"
 #include "Particles/ParticleSystemComponent.h"
-#include "ItemBase.h"
 
 // Sets default values
 ACharacterBase::ACharacterBase()
@@ -71,7 +70,9 @@ ACharacterBase::ACharacterBase()
 	bShouldFire = true;
 	AutomaticFireRate = 0.1f;
 
-	
+	// 아이템 트레이스
+	bShouldTraceForItems = false;
+	OverlappedItemCount = 0;
 }
 
 // Called when the game starts or when spawned
@@ -100,22 +101,8 @@ void ACharacterBase::Tick(float DeltaTime)
 	// 십자선 퍼짐 정도 계산
 	CalculateCrosshairSpread(DeltaTime);
 
-	FHitResult ItemTraceResult;
-	FVector HitLocation;
-	TraceUnderCrosshairs(ItemTraceResult, HitLocation);
-
-	if (ItemTraceResult.bBlockingHit)
-	{
-		AItemBase* HitItem = Cast<AItemBase>(ItemTraceResult.Actor);
-		if (HitItem && HitItem->GetPickupWidget())
-		{
-			// 라인 트레이스에 충돌하면 해당 아이템 위젯 활성화
-			HitItem->GetPickupWidget()->SetVisibility(true);
-		}
-		else
-		{
-		}
-	}
+	// Overlap 된 아이템 확인, 해당 아이템 트레이스
+	TraceForItems();
 }
 
 // Called to bind functionality to input
@@ -470,4 +457,54 @@ bool ACharacterBase::TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& Out
 		}
 	}
 	return false;
+}
+
+void ACharacterBase::IncrementOverlappedItemCount(int8 Amount)
+{
+	if (OverlappedItemCount + Amount <= 0)
+	{
+		OverlappedItemCount = 0;
+		bShouldTraceForItems = false;
+	}
+	else
+	{
+		OverlappedItemCount += Amount; 
+		bShouldTraceForItems = true;
+	}
+}
+
+void ACharacterBase::TraceForItems()
+{
+	if (bShouldTraceForItems)
+	{
+		FHitResult ItemTraceResult;
+		FVector HitLocation;
+		TraceUnderCrosshairs(ItemTraceResult, HitLocation);
+
+		if (ItemTraceResult.bBlockingHit)
+		{
+			AItemBase* HitItem = Cast<AItemBase>(ItemTraceResult.Actor);
+			
+			// 라인 트레이스에 충돌하면 해당 아이템 위젯 활성화
+			if (HitItem && HitItem->GetPickupWidget())
+			{
+				HitItem->GetPickupWidget()->SetVisibility(true);
+			}
+
+			if (TraceHitItemLastFrame)
+			{
+				if (HitItem != TraceHitItemLastFrame)
+				{
+					TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+				}
+			}
+
+			// 마지막으로 위젯이 활성화 된 아이템의 레퍼런스 저장
+			TraceHitItemLastFrame = HitItem;
+		}
+	}
+	else if (TraceHitItemLastFrame)
+	{
+		TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+	}
 }
