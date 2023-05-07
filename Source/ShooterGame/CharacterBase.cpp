@@ -73,6 +73,7 @@ ACharacterBase::ACharacterBase()
 	// 아이템 트레이스
 	bShouldTraceForItems = false;
 	OverlappedItemCount = 0;
+	
 }
 
 // Called when the game starts or when spawned
@@ -85,6 +86,10 @@ void ACharacterBase::BeginPlay()
 		CameraDefaultFov = GetCamera()->FieldOfView;
 		CameraCurrentFov = CameraDefaultFov;
 	}
+
+
+	// 기본 무기 스폰 후 소켓에 장착
+	EquipWeapon(SpawnDefaultWeapon());
 }
 
 // Called every frame
@@ -506,5 +511,32 @@ void ACharacterBase::TraceForItems()
 	else if (TraceHitItemLastFrame)
 	{
 		TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+	}
+}
+
+AWeaponBase* ACharacterBase::SpawnDefaultWeapon()
+{
+	if (DefaultWeaponClass)
+	{
+		// 무기 스폰
+		return GetWorld()->SpawnActor<AWeaponBase>(DefaultWeaponClass);
+	}
+
+	return nullptr;
+}
+
+void ACharacterBase::EquipWeapon(AWeaponBase* WeaponToEquip)
+{
+	if (WeaponToEquip)
+	{
+		// 부착할 소켓
+		const USkeletalMeshSocket* HandSocket = GetMesh()->GetSocketByName(FName("RightHandSocket"));
+		if (HandSocket)
+		{
+			HandSocket->AttachActor(WeaponToEquip, GetMesh());
+		}
+
+		EquippedWeapon = WeaponToEquip;
+		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
 	}
 }

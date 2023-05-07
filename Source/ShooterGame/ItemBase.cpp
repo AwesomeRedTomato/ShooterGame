@@ -34,6 +34,7 @@ AItemBase::AItemBase()
 	ItemName = FString(TEXT("Default"));
 	ItemCount = 0;
 	ItemRarity = EItemRarity::EIR_Common;
+	ItemState = EItemState::EIS_Pickup;
 }
 
 // Called when the game starts or when spawned
@@ -54,6 +55,7 @@ void AItemBase::BeginPlay()
 	AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &AItemBase::OnSphereBeginOverlap);
 	AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AItemBase::OnSphereEndOverlap);
 
+	SetItemProperties(ItemState);
 }
 
 void AItemBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -88,6 +90,12 @@ void AItemBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void AItemBase::SetItemState(EItemState State)
+{
+	ItemState = State;
+	SetItemProperties(State);
 }
 
 void AItemBase::SetActiveStars()
@@ -131,6 +139,55 @@ void AItemBase::SetActiveStars()
 
 	case EItemRarity::EIR_MAX:
 		break;
+	default:
+		break;
+	}
+}
+
+void AItemBase::SetItemProperties(EItemState State)
+{
+	switch (State)
+	{
+	case EItemState::EIS_Pickup:
+		Mesh->SetSimulatePhysics(false);
+		Mesh->SetVisibility(true);
+		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		AreaSphere->SetCollisionResponseToChannels(ECollisionResponse::ECR_Overlap);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+
+		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+		CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		break;
+
+	case EItemState::EIS_EquipInterping:
+		Mesh->SetSimulatePhysics(false);
+		Mesh->SetVisibility(true);
+		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+		CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		break;
+
+	case EItemState::EIS_PickedUp:
+		break;
+	
+	case EItemState::EIS_Equipped:
+		break;
+	
+	case EItemState::EIS_Falling:
+		break;
+	
+	case EItemState::EIS_MAX:
+		break;
+	
 	default:
 		break;
 	}

@@ -21,6 +21,18 @@ enum class EItemRarity : uint8
 	EIR_MAX			UMETA(DisplayName = "DefaultMAX"),
 };
 
+UENUM(BlueprintType)
+enum class EItemState : uint8
+{
+	EIS_Pickup			UMETA(DisplayName = "Pickup"),
+	EIS_EquipInterping	UMETA(DisplayName = "EquipInterping"),
+	EIS_PickedUp		UMETA(DisplayName = "PickedUp"),
+	EIS_Equipped		UMETA(DisplayName = "Equipped"),
+	EIS_Falling			UMETA(DisplayName = "Falling"),
+
+	EIS_MAX				UMETA(DisplayName = "DefaultMAX"),
+};
+
 UCLASS()
 class SHOOTERGAME_API AItemBase : public AActor
 {
@@ -65,7 +77,14 @@ private:
 
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
+
+	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
 	
+	FORCEINLINE UBoxComponent* GetCollisionBox() const { return CollisionBox; }
+	
+	FORCEINLINE EItemState GetItemState() const { return ItemState; }
+	void SetItemState(EItemState State);
+
 private:
 	/** 위젯에 바인딩 할 아이템 이름 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
@@ -83,7 +102,14 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	TArray<bool> ActiveStars;
 
+	/** 아이템 상태 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	EItemState ItemState;
+
 public:
 	/** 희귀도에 따른 등급 별 활성화 */
 	void SetActiveStars();
+
+	/** 상태에 따른 아이템 속성 설정 */
+	void SetItemProperties(EItemState State);
 };

@@ -260,5 +260,19 @@ public:
 	void TraceForItems();
 
 private:
+	/** 현재 장착 중인 무기 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	AWeaponBase* EquippedWeapon;
+
+	/** 기본 무기를 세팅할 무기 클래스 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<AWeaponBase> DefaultWeaponClass;
+
+public:
+	/** 기본 무기 스폰, 장착 */
+	AWeaponBase* SpawnDefaultWeapon();
+
+	/** 획득한 무기 장착 */
+	void EquipWeapon(AWeaponBase* WeaponToEquip);
 
 };
