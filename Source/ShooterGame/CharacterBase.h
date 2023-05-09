@@ -275,4 +275,9 @@ public:
 	/** È¹µæÇÑ ¹«±â ÀåÂø */
 	void EquipWeapon(AWeaponBase* WeaponToEquip);
 
+	/** ¹«±â ÇØÁ¦ ½Ã ¶¥¿¡ ¶³¾î¶ß¸² */
+	void DropWeapon();
+
+	void SelectButtonPressed();
+	void SelectButtonReleased();
 };

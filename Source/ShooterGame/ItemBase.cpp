@@ -35,6 +35,10 @@ AItemBase::AItemBase()
 	ItemCount = 0;
 	ItemRarity = EItemRarity::EIR_Common;
 	ItemState = EItemState::EIS_Pickup;
+
+	// 아이템 낙하
+	ThrowItemTime = 0.7f;
+	bFalling = false;
 }
 
 // Called when the game starts or when spawned
@@ -90,6 +94,12 @@ void AItemBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (ItemState == EItemState::EIS_Falling && bFalling)
+	{
+		// 아이템 낙하 시 수직 상태 고정
+		FRotator MeshRotation{ 0.0f, Mesh->GetComponentRotation().Yaw, 0.0f };
+		Mesh->SetWorldRotation(MeshRotation, false, nullptr, ETeleportType::TeleportPhysics);
+	}
 }
 
 void AItemBase::SetItemState(EItemState State)
@@ -148,12 +158,14 @@ void AItemBase::SetItemProperties(EItemState State)
 {
 	switch (State)
 	{
+	// 줍기 가능한 상태
 	case EItemState::EIS_Pickup:
 		Mesh->SetSimulatePhysics(false);
+		Mesh->SetEnableGravity(false);
 		Mesh->SetVisibility(true);
 		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
+		
 		AreaSphere->SetCollisionResponseToChannels(ECollisionResponse::ECR_Overlap);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 
@@ -161,7 +173,8 @@ void AItemBase::SetItemProperties(EItemState State)
 		CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 		CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
-
+	
+	// ??
 	case EItemState::EIS_EquipInterping:
 		Mesh->SetSimulatePhysics(false);
 		Mesh->SetVisibility(true);
@@ -176,13 +189,39 @@ void AItemBase::SetItemProperties(EItemState State)
 		CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
 
+	// 현재 가지고 있는 아이템
 	case EItemState::EIS_PickedUp:
 		break;
 	
+	// 현재 장착 중인 아이템
 	case EItemState::EIS_Equipped:
+		Mesh->SetSimulatePhysics(false);
+		Mesh->SetEnableGravity(false);
+		Mesh->SetVisibility(true);
+		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
-	
+
+	// 낙하 중인 아이템
 	case EItemState::EIS_Falling:
+		Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		Mesh->SetSimulatePhysics(true);
+		Mesh->SetEnableGravity(true);
+		Mesh->SetVisibility(true);
+		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+
+		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	
 	case EItemState::EIS_MAX:
@@ -191,4 +230,32 @@ void AItemBase::SetItemProperties(EItemState State)
 	default:
 		break;
 	}
+}
+
+void AItemBase::ThrowItem()
+{
+	// 캐릭터 기준 Yaw축 회전
+	FRotator MeshRotation{ 0.0f, Mesh->GetComponentRotation().Yaw, 0.0f };
+	Mesh->SetWorldRotation(MeshRotation, false, nullptr, ETeleportType::TeleportPhysics);
+
+	const FVector MeshForward{ Mesh->GetForwardVector() };
+	const FVector MeshRight{ Mesh->GetRightVector() };
+
+	// 아이템이 떨어질 방향
+	FVector ImpulseDirection = MeshRight.RotateAngleAxis(-30.0f, MeshForward);
+	const float RandomRotation{ 30.0f };
+
+	ImpulseDirection = ImpulseDirection.RotateAngleAxis(RandomRotation, FVector(0.0f, 0.0f, 1.0f));
+	ImpulseDirection *= 20'000.0f;
+	Mesh->AddImpulse(ImpulseDirection);
+
+	bFalling = true;
+	
+	GetWorldTimerManager().SetTimer(ThrowItemTimer, this, &AItemBase::StopFalling, ThrowItemTime);
+}
+
+void AItemBase::StopFalling()
+{
+	bFalling = false;
+	SetItemState(EItemState::EIS_Pickup);
 }

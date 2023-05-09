@@ -124,6 +124,9 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("AimingButton", EInputEvent::IE_Pressed, this, &ACharacterBase::AimingButtonPressed);
 	PlayerInputComponent->BindAction("AimingButton", EInputEvent::IE_Released, this, &ACharacterBase::AimingButtonReleased);
 
+	PlayerInputComponent->BindAction("Select", EInputEvent::IE_Pressed, this, &ACharacterBase::SelectButtonPressed);
+	PlayerInputComponent->BindAction("Select", EInputEvent::IE_Released, this, &ACharacterBase::SelectButtonReleased);
+
 	// Bind Axis
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterBase::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ACharacterBase::MoveRight);
@@ -259,13 +262,7 @@ bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVe
 	{
 		OutBeamLocation = CrosshairHitResult.Location;
 	}
-	// 라인 트레이스가 충돌하지 않았을 때
-	else
-	{
-		// ??
-	}
-
-	// 두번째 충돌 검사(총구 - 목표점)
+	// 라인 트레이스가 충돌하지 않았을 때 두번째 충돌 검사(총구 - 목표점)
 	FHitResult WeaponTraceHit;
 	const FVector WeaponTraceStart{ MuzzleSocketLocation };
 	const FVector StartToEnd{ OutBeamLocation - MuzzleSocketLocation };
@@ -539,4 +536,25 @@ void ACharacterBase::EquipWeapon(AWeaponBase* WeaponToEquip)
 		EquippedWeapon = WeaponToEquip;
 		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
 	}
+}
+
+void ACharacterBase::DropWeapon()
+{
+	if (EquippedWeapon)
+	{
+		FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
+		EquippedWeapon->GetMesh()->DetachFromComponent(DetachmentTransformRules);
+
+		EquippedWeapon->SetItemState(EItemState::EIS_Falling);
+		EquippedWeapon->ThrowItem();
+	}
+}
+
+void ACharacterBase::SelectButtonPressed()
+{
+	DropWeapon();
+}
+
+void ACharacterBase::SelectButtonReleased()
+{
 }

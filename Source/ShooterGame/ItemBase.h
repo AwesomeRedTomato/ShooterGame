@@ -85,6 +85,8 @@ public:
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
 	void SetItemState(EItemState State);
 
+	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
+
 private:
 	/** 위젯에 바인딩 할 아이템 이름 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
@@ -106,10 +108,24 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	EItemState ItemState;
 
+	/** 아이템 낙하 타이머 */
+	FTimerHandle ThrowItemTimer;
+	float ThrowItemTime;
+
+	/** 낙하 여부 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	bool bFalling;
+
 public:
 	/** 희귀도에 따른 등급 별 활성화 */
 	void SetActiveStars();
 
 	/** 상태에 따른 아이템 속성 설정 */
 	void SetItemProperties(EItemState State);
+
+	/** 아이템 낙하 효과 */
+	void ThrowItem();
+
+	/** 아이템 낙하 완료 */
+	void StopFalling();
 };
