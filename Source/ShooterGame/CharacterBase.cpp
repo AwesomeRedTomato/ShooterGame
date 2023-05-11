@@ -78,6 +78,8 @@ ACharacterBase::ACharacterBase()
 	Starting9mmAmmo = 85;
 	StartingARAmmo = 120;
 
+	// 전투
+	CombatState = ECombatState::ECS_Unoccupied;
 }
 
 // Called when the game starts or when spawned
@@ -209,60 +211,21 @@ void ACharacterBase::LookUp(float Value)
 void ACharacterBase::FireWeapon()
 {
 	if (EquippedWeapon == nullptr) return;
-
-	if (FireSound)
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	if (WeaponHasAmmo())
 	{
-		UGameplayStatics::PlaySound2D(this, FireSound);
-	}
-
-	const USkeletalMeshSocket* BarrelSocket = EquippedWeapon->GetItemMesh()->GetSocketByName("BarrelSocket");
-
-	if (BarrelSocket)
-	{
-		FTransform SocketTransform = BarrelSocket->GetSocketTransform(EquippedWeapon->GetItemMesh());
-
-		// 총구 이펙트
-		if (MuzzleFlash)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SocketTransform);
-		}
-
-		// 총알 충돌 확인
-		FVector BeamEnd;
-		bool bBeamEnd = GetBeamEndLocation(SocketTransform.GetLocation(), BeamEnd);
-
-		if (bBeamEnd)
-		{
-			if (ImpactParticles)
-			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, BeamEnd);
-			}
-
-			UParticleSystemComponent* Beam =
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticles, SocketTransform);
-
-			if (Beam)
-			{
-				Beam->SetVectorParameter(FName("Target"), BeamEnd);
-			}
-		}
-
-		// 총 반동 애니메이션
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		if (AnimInstance && HipFireMontage)
-		{
-			AnimInstance->Montage_Play(HipFireMontage);
-			AnimInstance->Montage_JumpToSection(FName(TEXT("StartFire")));
-		}
-	}
-
-	// 발사 시 십자선 반동
-	StartCrosshairBulletFire();
-
-	if (EquippedWeapon)
-	{
+		PlayFireSound();
+		SendBullet();
+		PlayHipFireMontage();
 		EquippedWeapon->DecrementAmmo();
+	
+		StartFireTimer();
+
+		// 발사 시 십자선 반동
+		StartCrosshairBulletFire();
 	}
+
+
 }
 
 bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation)
@@ -276,6 +239,7 @@ bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVe
 	{
 		OutBeamLocation = CrosshairHitResult.Location;
 	}
+
 	// 라인 트레이스가 충돌하지 않았을 때 두번째 충돌 검사(총구 - 목표점)
 	FHitResult WeaponTraceHit;
 	const FVector WeaponTraceStart{ MuzzleSocketLocation };
@@ -334,6 +298,62 @@ void ACharacterBase::SetLookRates()
 	{
 		BaseTurnRate = HipTurnRate;
 		BaseLookUpRate = HipLookUpRate;
+	}
+}
+
+void ACharacterBase::PlayFireSound()
+{
+	// 발포음 재생
+	if (FireSound)
+	{
+		UGameplayStatics::PlaySound2D(this, FireSound);
+	}
+}
+
+void ACharacterBase::SendBullet()
+{
+	const USkeletalMeshSocket* BarrelSocket = EquippedWeapon->GetItemMesh()->GetSocketByName("BarrelSocket");
+
+	if (BarrelSocket)
+	{
+		FTransform SocketTransform = BarrelSocket->GetSocketTransform(EquippedWeapon->GetItemMesh());
+
+		// 총구 이펙트
+		if (MuzzleFlash)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SocketTransform);
+		}
+
+		// 총알 충돌 확인
+		FVector BeamEnd;
+		bool bBeamEnd = GetBeamEndLocation(SocketTransform.GetLocation(), BeamEnd);
+
+		if (bBeamEnd)
+		{
+			if (ImpactParticles)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, BeamEnd);
+			}
+
+			UParticleSystemComponent* Beam =
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticles, SocketTransform);
+
+			if (Beam)
+			{
+				Beam->SetVectorParameter(FName("Target"), BeamEnd);
+			}
+		}
+	}
+}
+
+void ACharacterBase::PlayHipFireMontage()
+{
+	// 총 반동 애니메이션 몽타주 재생
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HipFireMontage)
+	{
+		AnimInstance->Montage_Play(HipFireMontage);
+		AnimInstance->Montage_JumpToSection(FName(TEXT("StartFire")));
 	}
 }
 
@@ -420,24 +440,25 @@ void ACharacterBase::FireButtonReleased()
 
 void ACharacterBase::StartFireTimer()
 {
-	if (bShouldFire)
-	{
-		FireWeapon();
-		bShouldFire = false;
+	CombatState = ECombatState::ECS_FireTimerInProgress;
 
-		GetWorldTimerManager().SetTimer(AutoFireTimer, this, &ACharacterBase::AutoFireReset, AutomaticFireRate);
-	}
+	GetWorldTimerManager().SetTimer(AutoFireTimer, this, &ACharacterBase::AutoFireReset, AutomaticFireRate);
 }
 
 void ACharacterBase::AutoFireReset()
 {
+	CombatState = ECombatState::ECS_Unoccupied;
+
 	if (WeaponHasAmmo())
 	{
-		bShouldFire = true;
 		if (bFireButtonPressed)
 		{
-			StartFireTimer();
+			FireWeapon();
 		}
+	}
+	else
+	{
+		// Reload Weapon 추가 예정
 	}
 }
 

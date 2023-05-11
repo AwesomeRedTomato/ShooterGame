@@ -23,7 +23,7 @@ protected:
 private:
 	// ÃÑ¾Ë °³¼ö
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
-		int32 Ammo;
+	int32 Ammo;
 
 public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
