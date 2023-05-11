@@ -74,6 +74,10 @@ ACharacterBase::ACharacterBase()
 	bShouldTraceForItems = false;
 	OverlappedItemCount = 0;
 	
+	// 총알
+	Starting9mmAmmo = 85;
+	StartingARAmmo = 120;
+
 }
 
 // Called when the game starts or when spawned
@@ -87,9 +91,11 @@ void ACharacterBase::BeginPlay()
 		CameraCurrentFov = CameraDefaultFov;
 	}
 
-
 	// 기본 무기 스폰 후 소켓에 장착
 	EquipWeapon(SpawnDefaultWeapon());
+
+	// 총알 초기화
+	InitializeAmmoMap();
 }
 
 // Called every frame
@@ -569,4 +575,10 @@ void ACharacterBase::SwapWeapon(AWeaponBase* WeaponToSwap)
 	EquipWeapon(WeaponToSwap);
 	TraceHitItem = nullptr;
 	TraceHitItemLastFrame = nullptr;
+}
+
+void ACharacterBase::InitializeAmmoMap()
+{
+	AmmoMap.Add(EAmmoType::EAT_9mm, Starting9mmAmmo);
+	AmmoMap.Add(EAmmoType::EAT_AR, StartingARAmmo);
 }

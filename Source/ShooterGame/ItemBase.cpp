@@ -39,6 +39,7 @@ AItemBase::AItemBase()
 	// 아이템 낙하
 	ThrowItemTime = 0.7f;
 	bFalling = false;
+
 }
 
 // Called when the game starts or when spawned

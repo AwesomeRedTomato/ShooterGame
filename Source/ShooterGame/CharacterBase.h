@@ -12,6 +12,15 @@
 #include "WeaponBase.h"
 #include "CharacterBase.generated.h"
 
+UENUM(BlueprintType)
+enum class EAmmoType : uint8
+{
+	EAT_9mm		UMETA(DisplayName = "9mm"),
+	EAT_AR		UMETA(DisplayName = "AssaultRifle"),
+
+	EAT_NAX		UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class SHOOTERGAME_API ACharacterBase : public ACharacter
 {
@@ -286,4 +295,21 @@ public:
 	void SelectButtonReleased();
 
 	void SwapWeapon(AWeaponBase* WeaponToSwap);
+
+private:
+	/** 총알 타입 매핑 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	TMap<EAmmoType, int32> AmmoMap;
+
+	/** 9mm 탄 시작 개수 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	int32 Starting9mmAmmo;
+
+	/** AR 탄 시작 개수 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	int32 StartingARAmmo;
+
+public:
+	/** 총알 초기화 */
+	void InitializeAmmoMap();
 };
