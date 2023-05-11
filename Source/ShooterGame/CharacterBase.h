@@ -261,12 +261,16 @@ public:
 
 private:
 	/** 현재 장착 중인 무기 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	AWeaponBase* EquippedWeapon;
 
 	/** 기본 무기를 세팅할 무기 클래스 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AWeaponBase> DefaultWeaponClass;
+
+	/** 현재 트레이스 중인 아이템 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	AItemBase* TraceHitItem;
 
 public:
 	/** 기본 무기 스폰, 장착 */
@@ -280,4 +284,6 @@ public:
 
 	void SelectButtonPressed();
 	void SelectButtonReleased();
+
+	void SwapWeapon(AWeaponBase* WeaponToSwap);
 };

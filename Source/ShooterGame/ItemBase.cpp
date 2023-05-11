@@ -158,7 +158,6 @@ void AItemBase::SetItemProperties(EItemState State)
 {
 	switch (State)
 	{
-	// 줍기 가능한 상태
 	case EItemState::EIS_Pickup:
 		Mesh->SetSimulatePhysics(false);
 		Mesh->SetEnableGravity(false);
@@ -174,7 +173,6 @@ void AItemBase::SetItemProperties(EItemState State)
 		CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
 	
-	// ??
 	case EItemState::EIS_EquipInterping:
 		Mesh->SetSimulatePhysics(false);
 		Mesh->SetVisibility(true);
@@ -189,12 +187,12 @@ void AItemBase::SetItemProperties(EItemState State)
 		CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
 
-	// 현재 가지고 있는 아이템
 	case EItemState::EIS_PickedUp:
 		break;
 	
-	// 현재 장착 중인 아이템
 	case EItemState::EIS_Equipped:
+		PickupWidget->SetVisibility(false);
+
 		Mesh->SetSimulatePhysics(false);
 		Mesh->SetEnableGravity(false);
 		Mesh->SetVisibility(true);
@@ -208,7 +206,6 @@ void AItemBase::SetItemProperties(EItemState State)
 		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 
-	// 낙하 중인 아이템
 	case EItemState::EIS_Falling:
 		Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		Mesh->SetSimulatePhysics(true);

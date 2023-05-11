@@ -485,24 +485,24 @@ void ACharacterBase::TraceForItems()
 
 		if (ItemTraceResult.bBlockingHit)
 		{
-			AItemBase* HitItem = Cast<AItemBase>(ItemTraceResult.Actor);
+			TraceHitItem = Cast<AItemBase>(ItemTraceResult.Actor);
 			
 			// 라인 트레이스에 충돌하면 해당 아이템 위젯 활성화
-			if (HitItem && HitItem->GetPickupWidget())
+			if (TraceHitItem && TraceHitItem->GetPickupWidget())
 			{
-				HitItem->GetPickupWidget()->SetVisibility(true);
+				TraceHitItem->GetPickupWidget()->SetVisibility(true);
 			}
 
 			if (TraceHitItemLastFrame)
 			{
-				if (HitItem != TraceHitItemLastFrame)
+				if (TraceHitItem != TraceHitItemLastFrame)
 				{
 					TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
 				}
 			}
 
 			// 마지막으로 위젯이 활성화 된 아이템의 레퍼런스 저장
-			TraceHitItemLastFrame = HitItem;
+			TraceHitItemLastFrame = TraceHitItem;
 		}
 	}
 	else if (TraceHitItemLastFrame)
@@ -552,9 +552,21 @@ void ACharacterBase::DropWeapon()
 
 void ACharacterBase::SelectButtonPressed()
 {
-	DropWeapon();
+	if (TraceHitItem)
+	{
+		AWeaponBase* TraceHitWeapon = Cast<AWeaponBase>(TraceHitItem);
+		SwapWeapon(TraceHitWeapon);
+	}
 }
 
 void ACharacterBase::SelectButtonReleased()
 {
+}
+
+void ACharacterBase::SwapWeapon(AWeaponBase* WeaponToSwap)
+{
+	DropWeapon();
+	EquipWeapon(WeaponToSwap);
+	TraceHitItem = nullptr;
+	TraceHitItemLastFrame = nullptr;
 }
