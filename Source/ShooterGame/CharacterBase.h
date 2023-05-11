@@ -21,6 +21,16 @@ enum class EAmmoType : uint8
 	EAT_NAX		UMETA(DisplayName = "DefaultMAX")
 };
 
+UENUM(BlueprintType)
+enum class ECombatState : uint8
+{
+	ECS_Unoccupied				UMETA(DisplayName = "Unoccupied"),
+	ECS_FireTimerInProgress		UMETA(DisplayName = "FireTimerInProgress"),
+	ECS_Reloading				UMETA(DisplayName = "Reloading"),
+
+	ECS_MAX						UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class SHOOTERGAME_API ACharacterBase : public ACharacter
 {
@@ -34,7 +44,7 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
@@ -44,11 +54,11 @@ public:
 private:
 	/** 캐릭터와 카메라 사이에 배치할 SpringArm */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* SpringArm;
+		USpringArmComponent* SpringArm;
 
 	/** 캐릭터 시야 카메라 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* Camera;
+		UCameraComponent* Camera;
 
 public:
 	/** Spring Arm 리턴 */
@@ -60,43 +70,43 @@ public:
 private:
 	/** 적용 회전율(Yaw) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float BaseTurnRate;
-	
+		float BaseTurnRate;
+
 	/** 적용 회전율(Pitch) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float BaseLookUpRate;
+		float BaseLookUpRate;
 
 	/** 키보드 노줌 회전율(Yaw) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float HipTurnRate;
+		float HipTurnRate;
 
 	/** 키보드 노줌 회전율(Pitch) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float HipLookUpRate;
+		float HipLookUpRate;
 
 	/** 키보드 줌 감도(Yaw) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float AimingTurnRate;
+		float AimingTurnRate;
 
 	/** 키보드 줌 감도(Pitch)  */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
-	float AImingLookUpRate;
+		float AImingLookUpRate;
 
 	/** 마우스 노줌 감도(Yaw) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"), meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
-	float MouseHipTurnRate;
+		float MouseHipTurnRate;
 
 	/** 마우스 노줌 감도(Pitch) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"), meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
-	float MouseHipLookUpRate;
+		float MouseHipLookUpRate;
 
 	/** 마우스 줌 감도(Yaw) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"), meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
-	float MouseAimingTurnRate;
+		float MouseAimingTurnRate;
 
 	/** 마우스 줌 감도(Pitch) */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"), meta = (ClampMin = "0.0", ClampMax = "1.0", UIMin = "0.0", UIMax = "1.0"))
-	float MouseAimingLookUpRate;
+		float MouseAimingLookUpRate;
 
 public:
 	/** 앞뒤 이동 */
@@ -110,7 +120,7 @@ public:
 
 	/** 키보드 Pitch 회전(Rate: nomalized rate. (1.0f == 100%)) */
 	void LookUpAtRate(float Rate);
-	
+
 	/** 마우스 Yaw 회전 */
 	void Turn(float Value);
 
@@ -119,44 +129,44 @@ public:
 
 public:
 	/** 재생할 랜덤 발사음 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Combat")
-	USoundCue* FireSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+		USoundCue* FireSound;
 
 	/** 발사 애니메이션 몽타주 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Combat")
-	UAnimMontage* HipFireMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+		UAnimMontage* HipFireMontage;
 
 	/** 총구 이펙트 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category= "Combat")
-	UParticleSystem* MuzzleFlash;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+		UParticleSystem* MuzzleFlash;
+
 	/** 총알 충돌 이펙트 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UParticleSystem* ImpactParticles;
-	
+		UParticleSystem* ImpactParticles;
+
 	/** 총알 연기 트레일 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	UParticleSystem* BeamParticles;
+		UParticleSystem* BeamParticles;
 
 private:
 	/** 조준 여부 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	bool bAiming;
+		bool bAiming;
 
 	/** 디폴트 Fov */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	float CameraDefaultFov;
+		float CameraDefaultFov;
 
 	/** 조준 감도(조준경 사용 시) Fov */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	float CameraZoomedFov;
+		float CameraZoomedFov;
 
 	/** 현재 Fov */
 	float CameraCurrentFov;
 
 	/** 줌 보간 속도 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	float ZoomInterpSpeed;
+		float ZoomInterpSpeed;
 
 public:
 	/** 조준 여부 리턴 */
@@ -175,29 +185,29 @@ public:
 	/** 줌 보간 */
 	void CameraInterpZoom(float DeltaTime);
 
-	/** 적용 감도(BaseTurn, BaseLookUp) 설정 */ 
+	/** 적용 감도(BaseTurn, BaseLookUp) 설정 */
 	void SetLookRates();
 
 private:
 	/** 십자선 퍼지는 정도 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
-	float CrosshairSpreadMultiplier;
+		float CrosshairSpreadMultiplier;
 
 	/** Character Movement 속력에 따른 십자선 퍼짐 정도 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
-	float CrosshairVelocityFactor;
+		float CrosshairVelocityFactor;
 
 	/** 공중에서의 십자선 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
-	float CrosshairInAirFactor;
+		float CrosshairInAirFactor;
 
 	/** 조준경 사용 시 십자선 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
-	float CrosshairAimFactor;
-	
+		float CrosshairAimFactor;
+
 	/** 총 발사 시 십자선 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
-	float CrosshairShootingFactor;
+		float CrosshairShootingFactor;
 
 	/** 십자선의 총 발사 반동효과 변수들 */
 	float ShootTimeDuration;
@@ -213,14 +223,14 @@ public:
 
 	/** Crosshair Spread Multiplier 반환 */
 	UFUNCTION(BlueprintCallable)
-	float GetCrosshairSpreadMultiplier() const;
+		float GetCrosshairSpreadMultiplier() const;
 
 	/** 총 발포 시(LButton Pressed) 십자선 반동 효과 타이머 세팅 */
 	void StartCrosshairBulletFire();
 
 	/** 십자선 반동 효과 타이머 초기화 */
 	UFUNCTION()
-	void FinishCrosshairBulletFire();
+		void FinishCrosshairBulletFire();
 
 private:
 	/** 좌클릭 시 */
@@ -245,7 +255,7 @@ public:
 
 	/** 자동 발사 리셋 */
 	UFUNCTION()
-	void AutoFireReset();
+		void AutoFireReset();
 
 private:
 	/** 아이템의 AreaSphere 범위에 있다면 Trace 가능(True) */
@@ -256,7 +266,7 @@ private:
 
 	/** 마지막으로 트레이스 한 아이템 레퍼런스 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Items", meta = (AllowPrivateAccess = "true"))
-	AItemBase* TraceHitItemLastFrame;
+		AItemBase* TraceHitItemLastFrame;
 
 public:
 	/** Overlap 된 아이템 개수 반환 */
@@ -271,15 +281,15 @@ public:
 private:
 	/** 현재 장착 중인 무기 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-	AWeaponBase* EquippedWeapon;
+		AWeaponBase* EquippedWeapon;
 
 	/** 기본 무기를 세팅할 무기 클래스 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-	TSubclassOf<AWeaponBase> DefaultWeaponClass;
+		TSubclassOf<AWeaponBase> DefaultWeaponClass;
 
 	/** 현재 트레이스 중인 아이템 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-	AItemBase* TraceHitItem;
+		AItemBase* TraceHitItem;
 
 public:
 	/** 기본 무기 스폰, 장착 */
@@ -299,17 +309,19 @@ public:
 private:
 	/** 총알 타입 매핑 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-	TMap<EAmmoType, int32> AmmoMap;
+		TMap<EAmmoType, int32> AmmoMap;
 
 	/** 9mm 탄 시작 개수 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-	int32 Starting9mmAmmo;
+		int32 Starting9mmAmmo;
 
 	/** AR 탄 시작 개수 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-	int32 StartingARAmmo;
+		int32 StartingARAmmo;
 
 public:
 	/** 총알 초기화 */
 	void InitializeAmmoMap();
+
+	bool WeaponHasAmmo();
 };

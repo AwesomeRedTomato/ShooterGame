@@ -9,14 +9,14 @@ ACharacterBase::ACharacterBase()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	// Character의 회전이 Controller의 영향을 받지 않음
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = true;
 
 	// 캐릭터 무브먼트
-	GetCharacterMovement()->bOrientRotationToMovement = false; 
+	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 340.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 600.0f;
 	GetCharacterMovement()->AirControl = 600.0f;
@@ -24,7 +24,7 @@ ACharacterBase::ACharacterBase()
 	// SpringArm 초기화
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetRootComponent());
-	SpringArm->TargetArmLength = 180.0f;		
+	SpringArm->TargetArmLength = 180.0f;
 	SpringArm->bUsePawnControlRotation = true;
 	SpringArm->SocketOffset = FVector(0.0f, 50.0f, 100.0f);
 
@@ -32,11 +32,11 @@ ACharacterBase::ACharacterBase()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;	// 카메라 회전을 막아놓는다.
-	
+
 	// 회전율
 	BaseTurnRate = 45.0f;
 	BaseLookUpRate = 45.0f;
-	
+
 	// 조준경 사용/미사용 Fov
 	bAiming = false;
 	CameraDefaultFov = 0.0f; // BeginPlay에서 값 설정
@@ -63,7 +63,7 @@ ACharacterBase::ACharacterBase()
 	CrosshairAimFactor = 0.0f;
 	CrosshairShootingFactor = 0.0f;
 	bFiringBullet = false;
-	ShootTimeDuration = 0.05f;	
+	ShootTimeDuration = 0.05f;
 
 	// 자동 발사
 	bFireButtonPressed = false;
@@ -73,7 +73,7 @@ ACharacterBase::ACharacterBase()
 	// 아이템 트레이스
 	bShouldTraceForItems = false;
 	OverlappedItemCount = 0;
-	
+
 	// 총알
 	Starting9mmAmmo = 85;
 	StartingARAmmo = 120;
@@ -108,7 +108,7 @@ void ACharacterBase::Tick(float DeltaTime)
 
 	// 줌/노줌 감도 설정
 	SetLookRates();
-	
+
 	// 십자선 퍼짐 정도 계산
 	CalculateCrosshairSpread(DeltaTime);
 
@@ -120,13 +120,13 @@ void ACharacterBase::Tick(float DeltaTime)
 void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	
+
 	// Bind Action
 	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &ACharacter::Jump);
-	
+
 	PlayerInputComponent->BindAction("FireButton", EInputEvent::IE_Pressed, this, &ACharacterBase::FireButtonPressed);
 	PlayerInputComponent->BindAction("FireButton", EInputEvent::IE_Released, this, &ACharacterBase::FireButtonReleased);
-	
+
 	PlayerInputComponent->BindAction("AimingButton", EInputEvent::IE_Pressed, this, &ACharacterBase::AimingButtonPressed);
 	PlayerInputComponent->BindAction("AimingButton", EInputEvent::IE_Released, this, &ACharacterBase::AimingButtonReleased);
 
@@ -208,22 +208,25 @@ void ACharacterBase::LookUp(float Value)
 
 void ACharacterBase::FireWeapon()
 {
+	if (EquippedWeapon == nullptr) return;
+
 	if (FireSound)
 	{
 		UGameplayStatics::PlaySound2D(this, FireSound);
 	}
 
-	const USkeletalMeshSocket* BarrelSocket = GetMesh()->GetSocketByName("BarrelSocket");
+	const USkeletalMeshSocket* BarrelSocket = EquippedWeapon->GetItemMesh()->GetSocketByName("BarrelSocket");
+
 	if (BarrelSocket)
 	{
-		FTransform SocketTransform = BarrelSocket->GetSocketTransform(GetMesh());
+		FTransform SocketTransform = BarrelSocket->GetSocketTransform(EquippedWeapon->GetItemMesh());
 
 		// 총구 이펙트
 		if (MuzzleFlash)
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SocketTransform);
 		}
-		
+
 		// 총알 충돌 확인
 		FVector BeamEnd;
 		bool bBeamEnd = GetBeamEndLocation(SocketTransform.GetLocation(), BeamEnd);
@@ -235,9 +238,9 @@ void ACharacterBase::FireWeapon()
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, BeamEnd);
 			}
 
-			UParticleSystemComponent* Beam = 
+			UParticleSystemComponent* Beam =
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticles, SocketTransform);
-			
+
 			if (Beam)
 			{
 				Beam->SetVectorParameter(FName("Target"), BeamEnd);
@@ -255,12 +258,17 @@ void ACharacterBase::FireWeapon()
 
 	// 발사 시 십자선 반동
 	StartCrosshairBulletFire();
+
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->DecrementAmmo();
+	}
 }
 
 bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation)
 {
 	FHitResult CrosshairHitResult;
-	
+
 	bool bCrosshairHit = TraceUnderCrosshairs(CrosshairHitResult, OutBeamLocation);
 
 	// 라인 트레이스 충돌 시 해당 위치 설정
@@ -272,7 +280,7 @@ bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVe
 	FHitResult WeaponTraceHit;
 	const FVector WeaponTraceStart{ MuzzleSocketLocation };
 	const FVector StartToEnd{ OutBeamLocation - MuzzleSocketLocation };
-	const FVector WeaponTraceEnd{ MuzzleSocketLocation + StartToEnd	* 1.25f };
+	const FVector WeaponTraceEnd{ MuzzleSocketLocation + StartToEnd * 1.25f };
 
 	GetWorld()->LineTraceSingleByChannel(
 		WeaponTraceHit,
@@ -336,7 +344,7 @@ void ACharacterBase::CalculateCrosshairSpread(float DeltaTime)
 	FVector Velocity{ GetVelocity() };
 
 	CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
-	
+
 	// 공중에서의 십자선 퍼짐 정도 계산(점프했을 때 더 벌어짐)
 	if (GetCharacterMovement()->IsFalling())
 	{
@@ -366,12 +374,12 @@ void ACharacterBase::CalculateCrosshairSpread(float DeltaTime)
 	{
 		CrosshairShootingFactor = FMath::FInterpTo(CrosshairShootingFactor, 0.0f, DeltaTime, 60.0f);
 	}
-	
-	CrosshairSpreadMultiplier = 
-		0.5f + 
-		CrosshairVelocityFactor + 
-		CrosshairInAirFactor - 
-		CrosshairAimFactor + 
+
+	CrosshairSpreadMultiplier =
+		0.5f +
+		CrosshairVelocityFactor +
+		CrosshairInAirFactor -
+		CrosshairAimFactor +
 		CrosshairShootingFactor;
 }
 
@@ -385,9 +393,9 @@ void ACharacterBase::StartCrosshairBulletFire()
 	bFiringBullet = true;
 
 	GetWorldTimerManager().SetTimer(
-		CrosshairShootTimer, 
-		this, 
-		&ACharacterBase::FinishCrosshairBulletFire, 
+		CrosshairShootTimer,
+		this,
+		&ACharacterBase::FinishCrosshairBulletFire,
 		ShootTimeDuration);
 }
 
@@ -399,7 +407,10 @@ void ACharacterBase::FinishCrosshairBulletFire()
 void ACharacterBase::FireButtonPressed()
 {
 	bFireButtonPressed = true;
-	StartFireTimer();
+	if (WeaponHasAmmo())
+	{
+		StartFireTimer();
+	}
 }
 
 void ACharacterBase::FireButtonReleased()
@@ -420,10 +431,13 @@ void ACharacterBase::StartFireTimer()
 
 void ACharacterBase::AutoFireReset()
 {
-	bShouldFire = true;
-	if (bFireButtonPressed)
+	if (WeaponHasAmmo())
 	{
-		StartFireTimer();
+		bShouldFire = true;
+		if (bFireButtonPressed)
+		{
+			StartFireTimer();
+		}
 	}
 }
 
@@ -450,7 +464,7 @@ bool ACharacterBase::TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& Out
 	if (bScreenToWorld)
 	{
 		// 에임 - 아이템 트레이스 충돌 체크
-		const FVector Start{CrosshairWorldPosition};
+		const FVector Start{ CrosshairWorldPosition };
 		const FVector End{ Start + CrosshairWorldDirection * 50'000.0f };
 		GetWorld()->LineTraceSingleByChannel(
 			OutHitResult,
@@ -476,7 +490,7 @@ void ACharacterBase::IncrementOverlappedItemCount(int8 Amount)
 	}
 	else
 	{
-		OverlappedItemCount += Amount; 
+		OverlappedItemCount += Amount;
 		bShouldTraceForItems = true;
 	}
 }
@@ -492,7 +506,7 @@ void ACharacterBase::TraceForItems()
 		if (ItemTraceResult.bBlockingHit)
 		{
 			TraceHitItem = Cast<AItemBase>(ItemTraceResult.Actor);
-			
+
 			// 라인 트레이스에 충돌하면 해당 아이템 위젯 활성화
 			if (TraceHitItem && TraceHitItem->GetPickupWidget())
 			{
@@ -549,7 +563,7 @@ void ACharacterBase::DropWeapon()
 	if (EquippedWeapon)
 	{
 		FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
-		EquippedWeapon->GetMesh()->DetachFromComponent(DetachmentTransformRules);
+		EquippedWeapon->GetItemMesh()->DetachFromComponent(DetachmentTransformRules);
 
 		EquippedWeapon->SetItemState(EItemState::EIS_Falling);
 		EquippedWeapon->ThrowItem();
@@ -581,4 +595,11 @@ void ACharacterBase::InitializeAmmoMap()
 {
 	AmmoMap.Add(EAmmoType::EAT_9mm, Starting9mmAmmo);
 	AmmoMap.Add(EAmmoType::EAT_AR, StartingARAmmo);
+}
+
+bool ACharacterBase::WeaponHasAmmo()
+{
+	if (EquippedWeapon == nullptr) return false;
+
+	return EquippedWeapon->GetAmmo() > 0;
 }

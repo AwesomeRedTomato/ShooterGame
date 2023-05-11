@@ -85,7 +85,7 @@ public:
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
 	void SetItemState(EItemState State);
 
-	FORCEINLINE USkeletalMeshComponent* GetMesh() const { return Mesh; }
+	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return Mesh; }
 
 private:
 	/** 위젯에 바인딩 할 아이템 이름 */
