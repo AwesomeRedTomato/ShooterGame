@@ -135,6 +135,9 @@ public:
 	/** 발사 애니메이션 몽타주 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* HipFireMontage;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* ReloadMontage;
 
 	/** 총구 이펙트 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -192,11 +195,23 @@ public:
 	/** 적용 감도(BaseTurn, BaseLookUp) 설정 */
 	void SetLookRates();
 
+	/** 발포음 재생 */
 	void PlayFireSound();
 
+	/** 총 발사 슝 */
 	void SendBullet();
 
+	/** 발사 애니메이션 몽타주 재생 */
 	void PlayHipFireMontage();
+
+	/** 재장전 여부 설정 */
+	void ReloadButtonPressed();
+
+	/** 무기 재장전 */
+	void ReloadWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 
 private:
 	/** 십자선 퍼지는 정도 */

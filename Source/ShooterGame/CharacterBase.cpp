@@ -135,6 +135,8 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Select", EInputEvent::IE_Pressed, this, &ACharacterBase::SelectButtonPressed);
 	PlayerInputComponent->BindAction("Select", EInputEvent::IE_Released, this, &ACharacterBase::SelectButtonReleased);
 
+	PlayerInputComponent->BindAction("ReloadButton", EInputEvent::IE_Released, this, &ACharacterBase::ReloadButtonPressed);
+	
 	// Bind Axis
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterBase::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ACharacterBase::MoveRight);
@@ -221,11 +223,9 @@ void ACharacterBase::FireWeapon()
 	
 		StartFireTimer();
 
-		// 발사 시 십자선 반동
+		// 발사 시 십자선 반동 효과
 		StartCrosshairBulletFire();
 	}
-
-
 }
 
 bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation)
@@ -357,8 +357,39 @@ void ACharacterBase::PlayHipFireMontage()
 	}
 }
 
+void ACharacterBase::ReloadButtonPressed()
+{
+	ReloadWeapon();
+}
+
+void ACharacterBase::ReloadWeapon()
+{
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+
+	// 탄약 타입 매칭과 탄약이 있는지?? 추가 예정
+	// 재장전도 추가 예정 고로 무기도 다양하게 추가 예정
+	if (true)
+	{
+		FName MontageSection(TEXT("Reload SMG"));
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		
+		if (AnimInstance && ReloadMontage)
+		{
+			AnimInstance->Montage_Play(ReloadMontage);
+			AnimInstance->Montage_JumpToSection(MontageSection);
+		}
+	}
+}
+
+void ACharacterBase::FinishReloading()
+{
+	// 업데이트 AmmoMap 추가 예정
+	CombatState = ECombatState::ECS_Unoccupied;
+}
+
 void ACharacterBase::CalculateCrosshairSpread(float DeltaTime)
 {
+	// 십자선 고정
 	FVector2D WalkSpeedRange{ 0.0f, GetMovementComponent()->GetMaxSpeed() };
 	FVector2D VelocityMultiplierRange{ 0.0f, 1.0f };
 	FVector Velocity{ GetVelocity() };
@@ -449,6 +480,7 @@ void ACharacterBase::AutoFireReset()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
 
+	// 총알이 있으면 발사, 없으면 재장전
 	if (WeaponHasAmmo())
 	{
 		if (bFireButtonPressed)
@@ -458,7 +490,7 @@ void ACharacterBase::AutoFireReset()
 	}
 	else
 	{
-		// Reload Weapon 추가 예정
+		ReloadWeapon();
 	}
 }
 
