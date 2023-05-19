@@ -10,16 +10,8 @@
 #include "Sound/SoundCue.h"
 #include "ItemBase.h"
 #include "WeaponBase.h"
+#include "AmmoType.h"
 #include "CharacterBase.generated.h"
-
-UENUM(BlueprintType)
-enum class EAmmoType : uint8
-{
-	EAT_9mm		UMETA(DisplayName = "9mm"),
-	EAT_AR		UMETA(DisplayName = "AssaultRifle"),
-
-	EAT_NAX		UMETA(DisplayName = "DefaultMAX")
-};
 
 UENUM(BlueprintType)
 enum class ECombatState : uint8
@@ -183,7 +175,7 @@ public:
 	void FireWeapon();
 
 	/** 총알 충돌 지점 반환 */
-	bool GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation);
+	bool GetBeamEndLocation(const FVector& MuzzleSocketLocation, FHitResult& OutHitResult);
 
 	/** 조준 여부 설정 */
 	void AimingButtonPressed();
@@ -210,8 +202,12 @@ public:
 	/** 무기 재장전 */
 	void ReloadWeapon();
 
+	/** 재장전 마침 */
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+
+	/** 해당 무기 타입에 맞는 총알인지 */
+	bool CarryingAmmo();
 
 private:
 	/** 십자선 퍼지는 정도 */

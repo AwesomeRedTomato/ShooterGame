@@ -1,4 +1,4 @@
-#include "CharacterBase.h"
+	#include "CharacterBase.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "DrawDebugHelpers.h"
@@ -214,6 +214,7 @@ void ACharacterBase::FireWeapon()
 {
 	if (EquippedWeapon == nullptr) return;
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
+
 	if (WeaponHasAmmo())
 	{
 		PlayFireSound();
@@ -228,37 +229,37 @@ void ACharacterBase::FireWeapon()
 	}
 }
 
-bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FVector& OutBeamLocation)
+bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FHitResult& OutHitResult)
 {
+	FVector OutBeamLocation;
+	// Check for crosshair trace hit
 	FHitResult CrosshairHitResult;
-
 	bool bCrosshairHit = TraceUnderCrosshairs(CrosshairHitResult, OutBeamLocation);
 
-	// 라인 트레이스 충돌 시 해당 위치 설정
 	if (bCrosshairHit)
 	{
+		// Tentative beam location - still need to trace from gun
 		OutBeamLocation = CrosshairHitResult.Location;
 	}
+	else // no crosshair trace hit
+	{
+		// OutBeamLocation is the End location for the line trace
+	}
 
-	// 라인 트레이스가 충돌하지 않았을 때 두번째 충돌 검사(총구 - 목표점)
-	FHitResult WeaponTraceHit;
 	const FVector WeaponTraceStart{ MuzzleSocketLocation };
-	const FVector StartToEnd{ OutBeamLocation - MuzzleSocketLocation };
-	const FVector WeaponTraceEnd{ MuzzleSocketLocation + StartToEnd * 1.25f };
-
+	const FVector WeaponTraceEnd{ OutBeamLocation };
 	GetWorld()->LineTraceSingleByChannel(
-		WeaponTraceHit,
+		OutHitResult,
 		WeaponTraceStart,
 		WeaponTraceEnd,
 		ECollisionChannel::ECC_Visibility);
-
-	// 충돌체가 총구와 목표 지점 사이에 있다면
-	if (WeaponTraceHit.bBlockingHit)
+	if (!OutHitResult.bBlockingHit) // object between barrel and BeamEndPoint?
 	{
-		OutBeamLocation = WeaponTraceHit.Location;
-		return true;
+		OutHitResult.Location = OutBeamLocation;
+		return false;
 	}
-	return false;
+
+	return true;
 }
 
 void ACharacterBase::AimingButtonPressed()
@@ -325,14 +326,14 @@ void ACharacterBase::SendBullet()
 		}
 
 		// 총알 충돌 확인
-		FVector BeamEnd;
-		bool bBeamEnd = GetBeamEndLocation(SocketTransform.GetLocation(), BeamEnd);
+		FHitResult BeamHitResult;
+		bool bBeamEnd = GetBeamEndLocation(SocketTransform.GetLocation(), BeamHitResult);
 
 		if (bBeamEnd)
 		{
 			if (ImpactParticles)
 			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, BeamEnd);
+				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, BeamHitResult.Location);
 			}
 
 			UParticleSystemComponent* Beam =
@@ -340,7 +341,7 @@ void ACharacterBase::SendBullet()
 
 			if (Beam)
 			{
-				Beam->SetVectorParameter(FName("Target"), BeamEnd);
+				Beam->SetVectorParameter(FName("Target"), BeamHitResult.Location);
 			}
 		}
 	}
@@ -365,26 +366,60 @@ void ACharacterBase::ReloadButtonPressed()
 void ACharacterBase::ReloadWeapon()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	if (EquippedWeapon == nullptr) return;
 
-	// 탄약 타입 매칭과 탄약이 있는지?? 추가 예정
-	// 재장전도 추가 예정 고로 무기도 다양하게 추가 예정
-	if (true)
+	if (CarryingAmmo())
 	{
-		FName MontageSection(TEXT("Reload SMG"));
+		CombatState = ECombatState::ECS_Reloading;
+
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-		
 		if (AnimInstance && ReloadMontage)
 		{
 			AnimInstance->Montage_Play(ReloadMontage);
-			AnimInstance->Montage_JumpToSection(MontageSection);
+			AnimInstance->Montage_JumpToSection(EquippedWeapon->GetReloadMontageSection());
 		}
 	}
 }
 
 void ACharacterBase::FinishReloading()
 {
-	// 업데이트 AmmoMap 추가 예정
 	CombatState = ECombatState::ECS_Unoccupied;
+
+	if (EquippedWeapon == nullptr) return;
+
+	const EAmmoType AmmoType{ EquippedWeapon->GetAmmoType() };
+	if (AmmoMap.Contains(AmmoType))
+	{
+		int32 CarriedAmmo = AmmoMap[AmmoType];
+		const int32 MagEmptySpace = EquippedWeapon->GetMagazineCapacity() - EquippedWeapon->GetAmmo();
+
+		if (MagEmptySpace > CarriedAmmo)
+		{
+			EquippedWeapon->ReloadAmmo(CarriedAmmo);
+			CarriedAmmo = 0;
+			AmmoMap.Add(AmmoType, CarriedAmmo);
+		}
+		else
+		{
+			EquippedWeapon->ReloadAmmo(MagEmptySpace);
+			CarriedAmmo -= MagEmptySpace;
+			AmmoMap.Add(AmmoType, CarriedAmmo);
+		}
+	}
+}
+
+bool ACharacterBase::CarryingAmmo()
+{
+	if (EquippedWeapon == nullptr) return false;
+
+	auto AmmoType = EquippedWeapon->GetAmmoType();
+
+	if (AmmoMap.Contains(AmmoType))
+	{
+		return AmmoMap[AmmoType] > 0;
+	}
+
+	return false;
 }
 
 void ACharacterBase::CalculateCrosshairSpread(float DeltaTime)
@@ -496,18 +531,18 @@ void ACharacterBase::AutoFireReset()
 
 bool ACharacterBase::TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& OutHitLocation)
 {
-	// 현재 뷰포트 사이즈
+	// 뷰포트 크기
 	FVector2D ViewportSize;
 	if (GEngine && GEngine->GameViewport)
 	{
 		GEngine->GameViewport->GetViewportSize(ViewportSize);
 	}
 
-	// 월드에서의 십자선 위치, 방향
-	FVector2D CrosshairLocation(ViewportSize.X / 2, ViewportSize.Y / 2);
+	FVector2D CrosshairLocation(ViewportSize.X / 2.f, ViewportSize.Y / 2.f);
 	FVector CrosshairWorldPosition;
 	FVector CrosshairWorldDirection;
 
+	// 십자선의 월드 좌표
 	bool bScreenToWorld = UGameplayStatics::DeprojectScreenToWorld(
 		UGameplayStatics::GetPlayerController(this, 0),
 		CrosshairLocation,
@@ -516,15 +551,14 @@ bool ACharacterBase::TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& Out
 
 	if (bScreenToWorld)
 	{
-		// 에임 - 아이템 트레이스 충돌 체크
 		const FVector Start{ CrosshairWorldPosition };
-		const FVector End{ Start + CrosshairWorldDirection * 50'000.0f };
+		const FVector End{ Start + CrosshairWorldDirection * 50'000.f };
+		OutHitLocation = End;
 		GetWorld()->LineTraceSingleByChannel(
 			OutHitResult,
 			Start,
 			End,
 			ECollisionChannel::ECC_Visibility);
-
 		if (OutHitResult.bBlockingHit)
 		{
 			OutHitLocation = OutHitResult.Location;
@@ -554,13 +588,18 @@ void ACharacterBase::TraceForItems()
 	{
 		FHitResult ItemTraceResult;
 		FVector HitLocation;
+		
 		TraceUnderCrosshairs(ItemTraceResult, HitLocation);
 
 		if (ItemTraceResult.bBlockingHit)
 		{
 			TraceHitItem = Cast<AItemBase>(ItemTraceResult.Actor);
 
-			// 라인 트레이스에 충돌하면 해당 아이템 위젯 활성화
+			if (TraceHitItem && TraceHitItem->GetItemState() == EItemState::EIS_EquipInterping)
+			{
+				TraceHitItem = nullptr;
+			}
+
 			if (TraceHitItem && TraceHitItem->GetPickupWidget())
 			{
 				TraceHitItem->GetPickupWidget()->SetVisibility(true);
