@@ -232,18 +232,13 @@ void ACharacterBase::FireWeapon()
 bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FHitResult& OutHitResult)
 {
 	FVector OutBeamLocation;
-	// Check for crosshair trace hit
 	FHitResult CrosshairHitResult;
+
 	bool bCrosshairHit = TraceUnderCrosshairs(CrosshairHitResult, OutBeamLocation);
 
 	if (bCrosshairHit)
 	{
-		// Tentative beam location - still need to trace from gun
 		OutBeamLocation = CrosshairHitResult.Location;
-	}
-	else // no crosshair trace hit
-	{
-		// OutBeamLocation is the End location for the line trace
 	}
 
 	const FVector WeaponTraceStart{ MuzzleSocketLocation };
@@ -253,7 +248,7 @@ bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FHi
 		WeaponTraceStart,
 		WeaponTraceEnd,
 		ECollisionChannel::ECC_Visibility);
-	if (!OutHitResult.bBlockingHit) // object between barrel and BeamEndPoint?
+	if (!OutHitResult.bBlockingHit)
 	{
 		OutHitResult.Location = OutBeamLocation;
 		return false;

@@ -68,7 +68,6 @@ void AItemBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, A
 	if (OtherActor)
 	{
 		ACharacterBase* Character = Cast<ACharacterBase>(OtherActor);
-		
 		if (Character)
 		{
 			Character->IncrementOverlappedItemCount(1);
@@ -81,10 +80,9 @@ void AItemBase::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 	if (OtherActor)
 	{
 		ACharacterBase* Character = Cast<ACharacterBase>(OtherActor);
-
 		if (Character)
 		{
-			Character->IncrementOverlappedItemCount(-2);
+			Character->IncrementOverlappedItemCount(-1);
 		}
 	}
 
@@ -166,31 +164,14 @@ void AItemBase::SetItemProperties(EItemState State)
 		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		
-		AreaSphere->SetCollisionResponseToChannels(ECollisionResponse::ECR_Overlap);
+		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-
-		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
-		CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		break;
-	
-	case EItemState::EIS_EquipInterping:
-		Mesh->SetSimulatePhysics(false);
-		Mesh->SetVisibility(true);
-		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
+		
 		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 		CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
 
-	case EItemState::EIS_PickedUp:
-		break;
-	
 	case EItemState::EIS_Equipped:
 		PickupWidget->SetVisibility(false);
 
@@ -213,19 +194,45 @@ void AItemBase::SetItemProperties(EItemState State)
 		Mesh->SetEnableGravity(true);
 		Mesh->SetVisibility(true);
 		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
-
+		Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic,	ECollisionResponse::ECR_Block);
+		
 		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
+		
 		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
-	
-	case EItemState::EIS_MAX:
+
+	case EItemState::EIS_EquipInterping:
+		PickupWidget->SetVisibility(false);
+		
+		Mesh->SetSimulatePhysics(false);
+		Mesh->SetEnableGravity(false);
+		Mesh->SetVisibility(true);
+		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
-	
-	default:
+
+	case EItemState::EIS_PickedUp:
+		PickupWidget->SetVisibility(false);
+		
+		Mesh->SetSimulatePhysics(false);
+		Mesh->SetEnableGravity(false);
+		Mesh->SetVisibility(false);
+		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		
+		CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	}
 }

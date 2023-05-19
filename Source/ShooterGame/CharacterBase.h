@@ -174,7 +174,7 @@ public:
 	/** Fire Button이 눌렸을 때 호출 */
 	void FireWeapon();
 
-	/** 총알 충돌 지점 반환 */
+	/** 에임 라인 트레이싱 */
 	bool GetBeamEndLocation(const FVector& MuzzleSocketLocation, FHitResult& OutHitResult);
 
 	/** 조준 여부 설정 */

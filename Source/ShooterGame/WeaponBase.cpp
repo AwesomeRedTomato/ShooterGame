@@ -16,6 +16,7 @@ AWeaponBase::AWeaponBase()
 
 void AWeaponBase::BeginPlay()
 {
+	AItemBase::BeginPlay();
 }
 
 void AWeaponBase::DecrementAmmo()
