@@ -11,12 +11,18 @@ AWeaponBase::AWeaponBase()
 	WeaponType = EWeaponType::EWT_SubmachineGun;
 	AmmoType = EAmmoType::EAT_9mm;
 	ReloadMontageSection = FName(TEXT("Reload SMG"));
+	
+	ClipBoneName = FName(TEXT("smg_clip"));
+}
 
+void AWeaponBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
 }
 
 void AWeaponBase::BeginPlay()
 {
-	AItemBase::BeginPlay();
+	Super::BeginPlay();
 }
 
 void AWeaponBase::DecrementAmmo()

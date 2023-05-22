@@ -7,7 +7,6 @@
 void UShooterAnimInstance::NativeInitializeAnimation()
 {
 	ShooterCharacter = Cast<ACharacterBase>(TryGetPawnOwner());
-
 }
 
 void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)

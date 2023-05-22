@@ -80,6 +80,9 @@ ACharacterBase::ACharacterBase()
 
 	// ¿¸≈ı
 	CombatState = ECombatState::ECS_Unoccupied;
+
+	// HandSceneComponent
+	HandSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HandSceneComponent"));
 }
 
 // Called when the game starts or when spawned
@@ -415,6 +418,27 @@ bool ACharacterBase::CarryingAmmo()
 	}
 
 	return false;
+}
+
+void ACharacterBase::GrabClip()
+{
+	if (EquippedWeapon == nullptr) return;
+	if (HandSceneComponent == nullptr) return;
+
+
+	int32 ClipBoneIndex{ EquippedWeapon->GetItemMesh()->GetBoneIndex(EquippedWeapon->GetClipBoneName()) };
+	ClipTransform = EquippedWeapon->GetItemMesh()->GetBoneTransform(ClipBoneIndex);
+
+	FAttachmentTransformRules AttachmentRules(EAttachmentRule::KeepRelative, true);
+	HandSceneComponent->AttachToComponent(GetMesh(), AttachmentRules, FName(TEXT("Hand_L")));
+	HandSceneComponent->SetWorldTransform(ClipTransform);
+
+	EquippedWeapon->SetMovingClip(true);
+}
+
+void ACharacterBase::ReleaseClip()
+{
+	EquippedWeapon->SetMovingClip(false);
 }
 
 void ACharacterBase::CalculateCrosshairSpread(float DeltaTime)

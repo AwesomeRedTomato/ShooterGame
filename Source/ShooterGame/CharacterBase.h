@@ -187,28 +187,6 @@ public:
 	/** 적용 감도(BaseTurn, BaseLookUp) 설정 */
 	void SetLookRates();
 
-	/** 발포음 재생 */
-	void PlayFireSound();
-
-	/** 총 발사 슝 */
-	void SendBullet();
-
-	/** 발사 애니메이션 몽타주 재생 */
-	void PlayHipFireMontage();
-
-	/** 재장전 여부 설정 */
-	void ReloadButtonPressed();
-
-	/** 무기 재장전 */
-	void ReloadWeapon();
-
-	/** 재장전 마침 */
-	UFUNCTION(BlueprintCallable)
-	void FinishReloading();
-
-	/** 해당 무기 타입에 맞는 총알인지 */
-	bool CarryingAmmo();
-
 private:
 	/** 십자선 퍼지는 정도 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Crosshairs", meta = (AllowPrivateAccess = "true"))
@@ -235,6 +213,19 @@ private:
 	bool bFiringBullet;
 	FTimerHandle CrosshairShootTimer;
 
+private:
+	/** 좌클릭 시 */
+	bool bFireButtonPressed;
+
+	/** True - 발사 가능. False - 발사 타이머가 작동 중 */
+	bool bShouldFire;
+
+	/** 자동 발사 초당 횟수 */
+	float AutomaticFireRate;
+
+	/** 자동 발사 타이머 */
+	FTimerHandle AutoFireTimer;
+
 public:
 	/** 충돌체 정보와 위치를 반환하는 라인 트레이스 */
 	bool TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& OutHitLocation);
@@ -253,20 +244,6 @@ public:
 	UFUNCTION()
 	void FinishCrosshairBulletFire();
 
-private:
-	/** 좌클릭 시 */
-	bool bFireButtonPressed;
-
-	/** True - 발사 가능. False - 발사 타이머가 작동 중 */
-	bool bShouldFire;
-
-	/** 자동 발사 초당 횟수 */
-	float AutomaticFireRate;
-
-	/** 자동 발사 타이머 */
-	FTimerHandle AutoFireTimer;
-
-public:
 	/** 발사 버튼 Pressed/Released 시 호출 */
 	void FireButtonPressed();
 	void FireButtonReleased();
@@ -301,16 +278,36 @@ public:
 
 private:
 	/** 현재 장착 중인 무기 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	AWeaponBase* EquippedWeapon;
 
 	/** 기본 무기를 세팅할 무기 클래스 */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TSubclassOf<AWeaponBase> DefaultWeaponClass;
 
 	/** 현재 트레이스 중인 아이템 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	AItemBase* TraceHitItem;
+
+	/** 총알 타입 매핑 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	TMap<EAmmoType, int32> AmmoMap;
+
+	/** 9mm 탄 시작 개수 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	int32 Starting9mmAmmo;
+
+	/** AR 탄 시작 개수 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	int32 StartingARAmmo;
+
+	/** 재장전 탄창 트랜스폼 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	FTransform ClipTransform;
+	
+	/** 캐릭터 손 월드 트랜스폼 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	USceneComponent* HandSceneComponent;
 
 public:
 	/** 기본 무기 스폰, 장착 */
@@ -327,24 +324,40 @@ public:
 
 	void SwapWeapon(AWeaponBase* WeaponToSwap);
 
-private:
-	/** 총알 타입 매핑 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-	TMap<EAmmoType, int32> AmmoMap;
+	/** 발포음 재생 */
+	void PlayFireSound();
 
-	/** 9mm 탄 시작 개수 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-	int32 Starting9mmAmmo;
+	/** 총 발사 슝 */
+	void SendBullet();
 
-	/** AR 탄 시작 개수 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
-	int32 StartingARAmmo;
+	/** 발사 애니메이션 몽타주 재생 */
+	void PlayHipFireMontage();
 
-public:
 	/** 총알 초기화 */
 	void InitializeAmmoMap();
 
 	/** 총알 소지 여부 */
 	bool WeaponHasAmmo();
+
+	/** 재장전 여부 설정 */
+	void ReloadButtonPressed();
+
+	/** 무기 재장전 */
+	void ReloadWeapon();
+
+	/** 재장전 끝날 때 호출 */
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
+
+	/** 해당 무기 타입에 맞는 총알인지 확인 */
+	bool CarryingAmmo();
+
+	/** Grab Clip 노티파이에 호출됨 */
+	UFUNCTION(BlueprintCallable)
+	void GrabClip();
+
+	/** Replace Clip 노티파이에 호출됨 */
+	UFUNCTION(BlueprintCallable)
+	void ReleaseClip();
 
 };

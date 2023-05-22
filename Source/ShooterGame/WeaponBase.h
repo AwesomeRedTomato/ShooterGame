@@ -28,6 +28,8 @@ class SHOOTERGAME_API AWeaponBase : public AItemBase
 public:
 	AWeaponBase();
 
+	void Tick(float DeltaTime) override;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -52,17 +54,28 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	FName ReloadMontageSection;
 
+	/** 탄창 bone 이름 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	FName ClipBoneName;
+
+	/** 재장전 하는 동안 탄창 이동 여부 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	bool bMovingClip;
+
+
 public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE EAmmoType GetAmmoType() const { return AmmoType; }
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 	FORCEINLINE int32 GetMagazineCapacity() const { return MagazineCapacity; }
 	FORCEINLINE FName GetReloadMontageSection() const { return ReloadMontageSection; }
-
+	FORCEINLINE FName GetClipBoneName() const { return ClipBoneName; }
 
 	/** 총알 개수 감소 */
 	void DecrementAmmo();
 
 	/** 재장전 */
 	void ReloadAmmo(int32 Amount);
+
+	void SetMovingClip(bool Move) { bMovingClip = Move; }
 };
