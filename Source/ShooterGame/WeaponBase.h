@@ -62,7 +62,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	bool bMovingClip;
 
-
 public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE EAmmoType GetAmmoType() const { return AmmoType; }
@@ -78,4 +77,6 @@ public:
 	void ReloadAmmo(int32 Amount);
 
 	void SetMovingClip(bool Move) { bMovingClip = Move; }
+
+	bool ClipIsFull();
 };

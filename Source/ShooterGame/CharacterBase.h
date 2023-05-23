@@ -170,6 +170,7 @@ private:
 public:
 	/** 조준 여부 리턴 */
 	FORCEINLINE bool GetAiming() const { return bAiming; }
+	FORCEINLINE ECombatState GetCombatState() const { return CombatState; }
 
 	/** Fire Button이 눌렸을 때 호출 */
 	void FireWeapon();

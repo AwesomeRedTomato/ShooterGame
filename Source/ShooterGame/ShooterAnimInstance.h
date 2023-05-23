@@ -61,9 +61,17 @@ private:
 	/** 이전 프레임에서의 캐릭터 상반신 회전(Yaw) */
 	float CharacterYawLastFrame;
 
-	/**  */
+	/** 에임 오프셋 Yaw */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
 	float RootYawOffset;
+
+	/** 에임 오프셋 Pitch */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
+	float Pitch;
+
+	/** 재장전 여부 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
+	bool bReloading;
 
 	/** 현 프레임의 Rotation Curve */
 	float RotationCurve;

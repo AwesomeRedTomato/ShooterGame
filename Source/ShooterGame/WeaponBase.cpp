@@ -26,6 +26,11 @@ void AWeaponBase::BeginPlay()
 	Super::BeginPlay();
 }
 
+bool AWeaponBase::ClipIsFull()
+{
+	return Ammo >= MagazineCapacity;
+}
+
 void AWeaponBase::DecrementAmmo()
 {
 	if (Ammo - 1 <= 0)

@@ -15,6 +15,8 @@ UShooterAnimInstance::UShooterAnimInstance()
 	LastMovementOffsetYaw = 0.0f;
 	CharacterYawLastFrame = 0.0f;
 	RootYawOffset = 0.0f;
+	Pitch = 0.0f;
+	bReloading = false;
 }
 
 void UShooterAnimInstance::NativeInitializeAnimation()
@@ -31,15 +33,14 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	if (ShooterCharacter)
 	{
-		// 캐릭터의 velocity를 가져옴
+		bReloading = ShooterCharacter->GetCombatState() == ECombatState::ECS_Reloading;
+
 		FVector Velocity = ShooterCharacter->GetVelocity();
 		Velocity.Z = 0;
 		Speed = Velocity.Size();
 
-		// 캐릭터가 공중에 떠 있는지 가져옴
 		bIsInAir = ShooterCharacter->GetCharacterMovement()->IsFalling();
 
-		// 캐릭터 가속 확인
 		if (Speed > 0.0f)
 		{
 			bIsAccelerating = true;
@@ -68,6 +69,9 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 void UShooterAnimInstance::TurnInPlace()
 {
 	if (ShooterCharacter == nullptr) return;
+
+	Pitch = ShooterCharacter->GetBaseAimRotation().Pitch;
+
 	if (Speed > 0)
 	{
 		RootYawOffset = 0.0f;
