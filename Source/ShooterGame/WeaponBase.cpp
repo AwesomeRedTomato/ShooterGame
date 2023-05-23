@@ -13,6 +13,7 @@ AWeaponBase::AWeaponBase()
 	ReloadMontageSection = FName(TEXT("Reload SMG"));
 	
 	ClipBoneName = FName(TEXT("smg_clip"));
+	bMovingClip = false;
 }
 
 void AWeaponBase::Tick(float DeltaTime)

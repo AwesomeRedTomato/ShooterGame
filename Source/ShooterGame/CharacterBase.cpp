@@ -657,6 +657,11 @@ void ACharacterBase::EquipWeapon(AWeaponBase* WeaponToEquip)
 {
 	if (WeaponToEquip)
 	{
+		if (WeaponToEquip->GetEquipSound())
+		{
+			UGameplayStatics::PlaySound2D(this, WeaponToEquip->GetEquipSound());
+		}
+
 		// ºÎÂøÇÒ ¼ÒÄÏ
 		const USkeletalMeshSocket* HandSocket = GetMesh()->GetSocketByName(FName("RightHandSocket"));
 		if (HandSocket)
@@ -678,6 +683,7 @@ void ACharacterBase::DropWeapon()
 
 		EquippedWeapon->SetItemState(EItemState::EIS_Falling);
 		EquippedWeapon->ThrowItem();
+
 	}
 }
 
@@ -687,6 +693,11 @@ void ACharacterBase::SelectButtonPressed()
 	{
 		AWeaponBase* TraceHitWeapon = Cast<AWeaponBase>(TraceHitItem);
 		SwapWeapon(TraceHitWeapon);
+
+		if (TraceHitWeapon->GetPickupSound())
+		{
+			UGameplayStatics::PlaySound2D(this, TraceHitWeapon->GetPickupSound());
+		}
 	}
 }
 
