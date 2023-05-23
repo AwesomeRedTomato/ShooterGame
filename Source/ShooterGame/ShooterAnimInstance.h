@@ -42,6 +42,9 @@ protected:
 	/** 제자리 회전 */
 	void TurnInPlace();
 
+	/** 달릴 때 몸 기울기 */
+	void Lean(float DeltaTime);
+
 private:
 	/** 캐릭터의 이동 속도 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
@@ -67,12 +70,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bAiming;
 
-	/** 현 프레임에서의 캐릭터 상반신 회전(Yaw) */
-	float CharacterYaw;
-
-	/** 이전 프레임에서의 캐릭터 상반신 회전(Yaw) */
-	float CharacterYawLastFrame;
-
 	/** 에임 오프셋 Yaw */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
 	float RootYawOffset;
@@ -95,4 +92,19 @@ private:
 	/** 이전 프레임의 Rotation Curve */
 	float RotationCurveLastFrame;
 
+	/** 가만히 서있을 때 현 프레임에서의 캐릭터 상반신 회전(Yaw) */
+	float TIPCharacterYaw;
+	/** 가만히 서있을 때 이전 프레임에서의 캐릭터 상반신 회전(Yaw) */
+	float TIPCharacterYawLastFrame;
+
+	/** 현 프레임에서의 캐릭터 상반신 회전(Yaw) */
+	FRotator CharacterRotation;
+	/** 이전 프레임에서의 캐릭터 상반신 회전(Yaw) */
+	FRotator CharacterRotationLastFrame;
+
+private:
+	/** 달릴 때 몸 기울기에 사용 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Lean", meta = (AllowPrivateAccess = "true"))
+	float YawDelta;
+	
 };
