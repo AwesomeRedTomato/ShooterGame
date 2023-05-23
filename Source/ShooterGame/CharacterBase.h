@@ -361,4 +361,13 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ReleaseClip();
 
+private:
+	/** ¾É±â ¿©ºÎ */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bCrouching;
+
+public:
+	FORCEINLINE bool GetCrouching() const { return bCrouching; }
+
+	void CrouchButtonPressed();
 };

@@ -41,6 +41,7 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 
 	if (ShooterCharacter)
 	{
+		bCrouching = ShooterCharacter->GetCrouching();
 		bReloading = ShooterCharacter->GetCombatState() == ECombatState::ECS_Reloading;
 
 		FVector Velocity = ShooterCharacter->GetVelocity();
@@ -115,6 +116,7 @@ void UShooterAnimInstance::TurnInPlace()
 		TIPCharacterYaw = ShooterCharacter->GetActorRotation().Yaw;
 		
 		const float TIPYawDelta{ TIPCharacterYaw - TIPCharacterYawLastFrame };
+		
 
 		RootYawOffset = UKismetMathLibrary::NormalizeAxis(RootYawOffset - TIPYawDelta);
 
@@ -160,9 +162,4 @@ void UShooterAnimInstance::Lean(float DeltaTime)
 	const float Interp{ FMath::FInterpTo(YawDelta, Target, DeltaTime, 6.0f) };
 
 	YawDelta = FMath::Clamp(Interp, -90.0f, 90.0f);
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, -1, FColor::Green, FString::Printf(TEXT("YawDelta: %f"), YawDelta));
-	}
 }

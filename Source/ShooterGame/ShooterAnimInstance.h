@@ -53,6 +53,10 @@ private:
 	/** 캐릭터가 공중에 있는지 체크 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsInAir;
+
+	/** 앉기 여부 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bCrouching;
 	
 	/** 캐릭터가w 가속하는지 체크 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
@@ -86,6 +90,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
 	EOffsetState OffsetState;
 	
+	/** 달릴 때 몸 기울기에 사용 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Lean", meta = (AllowPrivateAccess = "true"))
+	float YawDelta;
+
 	/** 현 프레임의 Rotation Curve */
 	float RotationCurve;
 
@@ -102,9 +110,4 @@ private:
 	/** 이전 프레임에서의 캐릭터 상반신 회전(Yaw) */
 	FRotator CharacterRotationLastFrame;
 
-private:
-	/** 달릴 때 몸 기울기에 사용 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Lean", meta = (AllowPrivateAccess = "true"))
-	float YawDelta;
-	
 };

@@ -16,10 +16,12 @@ ACharacterBase::ACharacterBase()
 	bUseControllerRotationYaw = true;
 
 	// 캐릭터 무브먼트
+	bCrouching = false;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 340.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 600.0f;
 	GetCharacterMovement()->AirControl = 600.0f;
+
 
 	// SpringArm 초기화
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -140,6 +142,8 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("ReloadButton", EInputEvent::IE_Released, this, &ACharacterBase::ReloadButtonPressed);
 	
+	PlayerInputComponent->BindAction("Crouch", EInputEvent::IE_Pressed, this, &ACharacterBase::CrouchButtonPressed);
+
 	// Bind Axis
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterBase::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ACharacterBase::MoveRight);
@@ -439,6 +443,16 @@ void ACharacterBase::GrabClip()
 void ACharacterBase::ReleaseClip()
 {
 	EquippedWeapon->SetMovingClip(false);
+}
+
+void ACharacterBase::CrouchButtonPressed()
+{
+	GEngine->AddOnScreenDebugMessage(1, -1, FColor::Green, TEXT("Crouch"));
+
+	if (!GetCharacterMovement()->IsFalling())
+	{
+		bCrouching = !bCrouching;
+	}
 }
 
 void ACharacterBase::CalculateCrosshairSpread(float DeltaTime)
