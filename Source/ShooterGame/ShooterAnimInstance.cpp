@@ -17,6 +17,7 @@ UShooterAnimInstance::UShooterAnimInstance()
 	RootYawOffset = 0.0f;
 	Pitch = 0.0f;
 	bReloading = false;
+	OffsetState = EOffsetState::EOS_Hip;
 }
 
 void UShooterAnimInstance::NativeInitializeAnimation()
@@ -62,6 +63,23 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		}
 
 		bAiming = ShooterCharacter->GetAiming();
+
+		if (bReloading)
+		{
+			OffsetState = EOffsetState::EOS_Reloading;
+		}
+		else if (bIsInAir)
+		{
+			OffsetState = EOffsetState::EOS_InAir;
+		}
+		else if(ShooterCharacter->GetAiming())
+		{
+			OffsetState = EOffsetState::EOS_Aiming;
+		}
+		else
+		{
+			OffsetState = EOffsetState::EOS_Hip;
+		}
 	}
 	TurnInPlace();
 }
@@ -72,7 +90,7 @@ void UShooterAnimInstance::TurnInPlace()
 
 	Pitch = ShooterCharacter->GetBaseAimRotation().Pitch;
 
-	if (Speed > 0)
+	if (Speed > 0 || bIsInAir)
 	{
 		RootYawOffset = 0.0f;
 		CharacterYaw = ShooterCharacter->GetActorRotation().Yaw;

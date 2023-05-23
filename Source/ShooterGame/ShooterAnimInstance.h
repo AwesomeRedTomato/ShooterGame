@@ -11,6 +11,18 @@
 /**
  * 
  */
+
+UENUM(BlueprintType)
+enum class EOffsetState : uint8
+{
+	EOS_Aiming			UMETA(DisplayName = "Aiming"),
+	EOS_Hip				UMETA(DisplayName = "Hip"),
+	EOS_Reloading		UMETA(DisplayName = "Reloading"),
+	EOS_InAir			UMETA(DisplayName = "InAir"),
+
+	EOS_MAX				UMETA(DisplayName = "DefaultMAX"),
+};
+
 UCLASS()
 class SHOOTERGAME_API UShooterAnimInstance : public UAnimInstance
 {
@@ -73,9 +85,14 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
 	bool bReloading;
 
+	/** Offset State */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
+	EOffsetState OffsetState;
+	
 	/** 현 프레임의 Rotation Curve */
 	float RotationCurve;
 
 	/** 이전 프레임의 Rotation Curve */
 	float RotationCurveLastFrame;
+
 };
