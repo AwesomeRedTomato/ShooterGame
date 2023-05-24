@@ -353,11 +353,11 @@ public:
 	/** 해당 무기 타입에 맞는 총알인지 확인 */
 	bool CarryingAmmo();
 
-	/** Grab Clip 노티파이에 호출됨 */
+	/** Grab Clip 노티파이에 의해 호출됨 */
 	UFUNCTION(BlueprintCallable)
 	void GrabClip();
 
-	/** Replace Clip 노티파이에 호출됨 */
+	/** Replace Clip 노티파이에 의해 호출됨 */
 	UFUNCTION(BlueprintCallable)
 	void ReleaseClip();
 

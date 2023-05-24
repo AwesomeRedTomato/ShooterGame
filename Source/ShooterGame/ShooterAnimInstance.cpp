@@ -25,6 +25,9 @@ UShooterAnimInstance::UShooterAnimInstance()
 	CharacterRotation = FRotator(0.0f);
 	CharacterRotationLastFrame = FRotator(0.0f);
 	YawDelta = 0.0f;
+
+	RecoilWeight = 1.0f;
+	bTurningInPlace = false;
 }
 
 void UShooterAnimInstance::NativeInitializeAnimation()
@@ -123,6 +126,8 @@ void UShooterAnimInstance::TurnInPlace()
 		const float Turning{ GetCurveValue(TEXT("Turning")) };
 		if (Turning > 0)
 		{
+			bTurningInPlace = true;
+
 			RotationCurveLastFrame = RotationCurve;
 			RotationCurve = GetCurveValue(TEXT("Rotation"));
 
@@ -144,6 +149,48 @@ void UShooterAnimInstance::TurnInPlace()
 			{
 				const float YawExcess{ ABSRootYawOffset - 90.0f };
 				RootYawOffset > 0 ? RootYawOffset -= YawExcess : RootYawOffset += YawExcess;
+			}
+		}
+		else
+		{
+			bTurningInPlace = false;
+		}
+
+		if (bTurningInPlace)
+		{
+			if (bReloading)
+			{
+				RecoilWeight = 1.0f;
+			}
+			else
+			{
+				RecoilWeight = 0.0f;
+			}
+
+		}
+		else
+		{
+			if (bCrouching)
+			{
+				if (bReloading)
+				{
+					RecoilWeight = 1.0f;
+				}
+				else
+				{
+					RecoilWeight = 0.1f;
+				}
+			}
+			else
+			{
+				if (bAiming)
+				{
+					RecoilWeight = 1.0f;
+				}
+				else
+				{
+					RecoilWeight = 0.5f;
+				}
 			}
 		}
 	}

@@ -94,6 +94,13 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Lean", meta = (AllowPrivateAccess = "true"))
 	float YawDelta;
 
+	/** 반동 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	float RecoilWeight;
+			
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bTurningInPlace;
+
 	/** 현 프레임의 Rotation Curve */
 	float RotationCurve;
 
