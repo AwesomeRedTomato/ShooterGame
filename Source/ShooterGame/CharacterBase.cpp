@@ -21,7 +21,13 @@ ACharacterBase::ACharacterBase()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 340.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 600.0f;
 	GetCharacterMovement()->AirControl = 600.0f;
-
+	
+	BaseMovementSpeed = 650.0f;
+	CrouchMovementSpeed = 300.0f;
+	StandingCapsuleHalfHeight = 88.0f;
+	CrouchingCapsuleHalfHeight = 44.0f;
+	BaseGroundFriction = 2.0f;
+	CrouchingGroundFriction = 100.0f;
 
 	// SpringArm 초기화
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
@@ -92,6 +98,8 @@ void ACharacterBase::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+
 	if (Camera)
 	{
 		CameraDefaultFov = GetCamera()->FieldOfView;
@@ -103,6 +111,48 @@ void ACharacterBase::BeginPlay()
 
 	// 총알 초기화
 	InitializeAmmoMap();
+}
+
+void ACharacterBase::Jump()
+{
+	if (bCrouching)
+	{
+		bCrouching = false;
+		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+	}
+	else
+	{
+		ACharacter::Jump();
+	}
+}
+
+void ACharacterBase::InterpCapsuleHalfHeight(float DeltaTime)
+{
+	float TargetCapsuleHalfHeight{};
+
+	if (bCrouching)
+	{
+		TargetCapsuleHalfHeight = CrouchingCapsuleHalfHeight;
+	}
+	else
+	{
+		TargetCapsuleHalfHeight = StandingCapsuleHalfHeight;
+	}
+
+	const float InterpHalfHeight = FMath::FInterpTo(
+		GetCapsuleComponent()->GetScaledCapsuleHalfHeight(), 
+		TargetCapsuleHalfHeight,
+		DeltaTime,
+		20.0f);
+	
+	// 앉았을 때 음수, 서있을 때 양수 값을 가짐
+	const float DeltaCapsuleHalfHeight{ InterpHalfHeight - GetCapsuleComponent()->GetScaledCapsuleHalfHeight() };
+	const FVector MeshOffset{ 0.0f, 0.0f, -DeltaCapsuleHalfHeight };
+
+	// 캡슐의 절반 높이만큼 메시를 올려줌
+	GetMesh()->AddLocalOffset(MeshOffset);
+
+	GetCapsuleComponent()->SetCapsuleHalfHeight(InterpHalfHeight);
 }
 
 // Called every frame
@@ -121,6 +171,9 @@ void ACharacterBase::Tick(float DeltaTime)
 
 	// Overlap 된 아이템 확인, 해당 아이템 트레이스
 	TraceForItems();
+
+	// 캡슐 높이 보간
+	InterpCapsuleHalfHeight(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -129,7 +182,7 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	// Bind Action
-	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &ACharacterBase::Jump);
 
 	PlayerInputComponent->BindAction("FireButton", EInputEvent::IE_Pressed, this, &ACharacterBase::FireButtonPressed);
 	PlayerInputComponent->BindAction("FireButton", EInputEvent::IE_Released, this, &ACharacterBase::FireButtonReleased);
@@ -452,6 +505,17 @@ void ACharacterBase::CrouchButtonPressed()
 	if (!GetCharacterMovement()->IsFalling())
 	{
 		bCrouching = !bCrouching;
+	}
+
+	if (bCrouching)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = CrouchMovementSpeed;
+		GetCharacterMovement()->GroundFriction = CrouchingGroundFriction;
+	}
+	else
+	{
+		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+		GetCharacterMovement()->GroundFriction = BaseGroundFriction;
 	}
 }
 

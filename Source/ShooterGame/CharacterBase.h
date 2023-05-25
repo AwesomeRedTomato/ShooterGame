@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Camera/CameraComponent.h"
 #include "Sound/SoundCue.h"
 #include "ItemBase.h"
@@ -35,6 +36,11 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	virtual void Jump() override;
+
+	/** 캡슐 높이 변경 보간 */
+	void InterpCapsuleHalfHeight(float DeltaTime);
 
 public:
 	// Called every frame
@@ -366,8 +372,37 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bCrouching;
 
+	/** 기본 이동 속도 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	float BaseMovementSpeed;
+	
+	/** 앉았을 때 이동 속도 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	float CrouchMovementSpeed;
+
+	/** 현재 캡슐 절반 높이 */
+	float CurrentCapsuleHalfHeight;
+
+	/** 서있을 때 캡슐 절반 높이 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	float StandingCapsuleHalfHeight;
+
+	/** 앉았을 때 캡슐 절반 높이 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	float CrouchingCapsuleHalfHeight;
+
+	/** 기본 지면 마찰 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	float BaseGroundFriction;
+	
+	/** 앉았을 때 지면 마찰 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	float CrouchingGroundFriction;
+
 public:
 	FORCEINLINE bool GetCrouching() const { return bCrouching; }
 
+	/** 좌측Ctrl */
 	void CrouchButtonPressed();
+
 };

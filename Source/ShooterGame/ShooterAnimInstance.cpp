@@ -26,8 +26,9 @@ UShooterAnimInstance::UShooterAnimInstance()
 	CharacterRotationLastFrame = FRotator(0.0f);
 	YawDelta = 0.0f;
 
-	RecoilWeight = 1.0f;
+	RecoilWeight = 0.7f;
 	bTurningInPlace = false;
+	
 }
 
 void UShooterAnimInstance::NativeInitializeAnimation()
@@ -106,10 +107,10 @@ void UShooterAnimInstance::TurnInPlace()
 	if (Speed > 0 || bIsInAir)
 	{
 		RootYawOffset = 0.0f;
-		
+
 		TIPCharacterYaw = ShooterCharacter->GetActorRotation().Yaw;
 		TIPCharacterYawLastFrame = TIPCharacterYaw;
-	
+
 		RotationCurveLastFrame = 0.0f;
 		RotationCurve = 0.0f;
 	}
@@ -117,9 +118,9 @@ void UShooterAnimInstance::TurnInPlace()
 	{
 		TIPCharacterYawLastFrame = TIPCharacterYaw;
 		TIPCharacterYaw = ShooterCharacter->GetActorRotation().Yaw;
-		
+
 		const float TIPYawDelta{ TIPCharacterYaw - TIPCharacterYawLastFrame };
-		
+
 
 		RootYawOffset = UKismetMathLibrary::NormalizeAxis(RootYawOffset - TIPYawDelta);
 
@@ -160,7 +161,7 @@ void UShooterAnimInstance::TurnInPlace()
 		{
 			if (bReloading)
 			{
-				RecoilWeight = 1.0f;
+				RecoilWeight = 0.7f;
 			}
 			else
 			{
@@ -172,25 +173,11 @@ void UShooterAnimInstance::TurnInPlace()
 		{
 			if (bCrouching)
 			{
-				if (bReloading)
-				{
-					RecoilWeight = 1.0f;
-				}
-				else
-				{
-					RecoilWeight = 0.1f;
-				}
+				RecoilWeight = 0.5f;
 			}
 			else
 			{
-				if (bAiming)
-				{
-					RecoilWeight = 1.0f;
-				}
-				else
-				{
-					RecoilWeight = 0.5f;
-				}
+				RecoilWeight = 0.7f;
 			}
 		}
 	}
