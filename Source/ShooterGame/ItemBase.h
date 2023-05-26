@@ -59,6 +59,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	/** 아이템 상태 */
+	virtual void SetItemState(EItemState State);
+
 private:
 	/** 충돌 박스 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
@@ -84,16 +87,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	USoundCue* EquipSound;
 
-public:
-	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
-	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
-	FORCEINLINE UBoxComponent* GetCollisionBox() const { return CollisionBox; }
-	FORCEINLINE EItemState GetItemState() const { return ItemState; }
-	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return Mesh; }
-	FORCEINLINE USoundCue* GetPickupSound() const { return PickupSound; }
-	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; }
-
-	void SetItemState(EItemState State);
 
 private:
 	/** 위젯에 바인딩 할 아이템 이름 */
@@ -126,10 +119,21 @@ private:
 
 public:
 	/** 희귀도에 따른 등급 별 활성화 */
+public:
+	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
+	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
+	FORCEINLINE UBoxComponent* GetCollisionBox() const { return CollisionBox; }
+	FORCEINLINE EItemState GetItemState() const { return ItemState; }
+	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return Mesh; }
+	FORCEINLINE USoundCue* GetPickupSound() const { return PickupSound; }
+	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; }
+
+	
+	/** 활성 등급(별) */
 	void SetActiveStars();
 
 	/** 상태에 따른 아이템 속성 설정 */
-	void SetItemProperties(EItemState State);
+	virtual void SetItemProperties(EItemState State);
 
 	/** 아이템 낙하 효과 */
 	void ThrowItem();

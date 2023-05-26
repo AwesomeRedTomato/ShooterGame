@@ -1,0 +1,35 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "ItemBase.h"
+#include "Ammo.generated.h"
+
+/**
+ * 
+ */
+UCLASS()
+class SHOOTERGAME_API AAmmo : public AItemBase
+{
+	GENERATED_BODY()
+
+public:
+	AAmmo();
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void SetItemState(EItemState State) override;
+
+private:
+	/** Mesh for the ammo pickup */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Ammo, meta = (AllowPrivateAccess = "true"))
+	UStaticMeshComponent* AmmoMesh;
+
+};

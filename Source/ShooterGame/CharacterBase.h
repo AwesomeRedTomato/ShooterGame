@@ -12,6 +12,7 @@
 #include "ItemBase.h"
 #include "WeaponBase.h"
 #include "AmmoType.h"
+#include "Ammo.h"
 #include "CharacterBase.generated.h"
 
 UENUM(BlueprintType)
@@ -290,6 +291,8 @@ public:
 
 	/** 아이템 트레이스 */
 	void TraceForItems();
+
+	void GetPickupItem(AItemBase* Item);
 
 private:
 	/** 현재 장착 중인 무기 */

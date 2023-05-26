@@ -320,11 +320,9 @@ bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FHi
 
 	const FVector WeaponTraceStart{ MuzzleSocketLocation };
 	const FVector WeaponTraceEnd{ OutBeamLocation };
-	GetWorld()->LineTraceSingleByChannel(
-		OutHitResult,
-		WeaponTraceStart,
-		WeaponTraceEnd,
-		ECollisionChannel::ECC_Visibility);
+	
+	GetWorld()->LineTraceSingleByChannel(OutHitResult, WeaponTraceStart, WeaponTraceEnd, ECollisionChannel::ECC_Visibility);
+	
 	if (!OutHitResult.bBlockingHit)
 	{
 		OutHitResult.Location = OutBeamLocation;
@@ -684,11 +682,9 @@ bool ACharacterBase::TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& Out
 		const FVector Start{ CrosshairWorldPosition };
 		const FVector End{ Start + CrosshairWorldDirection * 50'000.f };
 		OutHitLocation = End;
-		GetWorld()->LineTraceSingleByChannel(
-			OutHitResult,
-			Start,
-			End,
-			ECollisionChannel::ECC_Visibility);
+
+		GetWorld()->LineTraceSingleByChannel(OutHitResult, Start, End, ECollisionChannel::ECC_Visibility);
+		
 		if (OutHitResult.bBlockingHit)
 		{
 			OutHitLocation = OutHitResult.Location;
@@ -704,6 +700,7 @@ void ACharacterBase::IncrementOverlappedItemCount(int8 Amount)
 	{
 		OverlappedItemCount = 0;
 		bShouldTraceForItems = false;
+
 	}
 	else
 	{
@@ -724,7 +721,7 @@ void ACharacterBase::TraceForItems()
 		if (ItemTraceResult.bBlockingHit)
 		{
 			TraceHitItem = Cast<AItemBase>(ItemTraceResult.Actor);
-
+			
 			if (TraceHitItem && TraceHitItem->GetItemState() == EItemState::EIS_EquipInterping)
 			{
 				TraceHitItem = nullptr;
@@ -753,6 +750,22 @@ void ACharacterBase::TraceForItems()
 	}
 }
 
+void ACharacterBase::GetPickupItem(AItemBase* Item)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Tracing Pickup Item and"));
+	auto Weapon = Cast<AWeaponBase>(Item);
+
+	if (Weapon)
+	{
+		SwapWeapon(Weapon);
+
+		if (Weapon->GetPickupSound())
+		{
+			UGameplayStatics::PlaySound2D(this, Weapon->GetPickupSound());
+		}
+	}
+}
+
 AWeaponBase* ACharacterBase::SpawnDefaultWeapon()
 {
 	if (DefaultWeaponClass)
@@ -768,16 +781,16 @@ void ACharacterBase::EquipWeapon(AWeaponBase* WeaponToEquip)
 {
 	if (WeaponToEquip)
 	{
-		if (WeaponToEquip->GetEquipSound())
-		{
-			UGameplayStatics::PlaySound2D(this, WeaponToEquip->GetEquipSound());
-		}
-
 		// ºÎÂøÇÒ ¼ÒÄÏ
 		const USkeletalMeshSocket* HandSocket = GetMesh()->GetSocketByName(FName("RightHandSocket"));
 		if (HandSocket)
 		{
 			HandSocket->AttachActor(WeaponToEquip, GetMesh());
+		}
+
+		if (WeaponToEquip->GetEquipSound())
+		{
+			UGameplayStatics::PlaySound2D(this, WeaponToEquip->GetEquipSound());
 		}
 
 		EquippedWeapon = WeaponToEquip;
@@ -794,7 +807,6 @@ void ACharacterBase::DropWeapon()
 
 		EquippedWeapon->SetItemState(EItemState::EIS_Falling);
 		EquippedWeapon->ThrowItem();
-
 	}
 }
 
@@ -802,13 +814,7 @@ void ACharacterBase::SelectButtonPressed()
 {
 	if (TraceHitItem)
 	{
-		AWeaponBase* TraceHitWeapon = Cast<AWeaponBase>(TraceHitItem);
-		SwapWeapon(TraceHitWeapon);
-
-		if (TraceHitWeapon->GetPickupSound())
-		{
-			UGameplayStatics::PlaySound2D(this, TraceHitWeapon->GetPickupSound());
-		}
+		GetPickupItem(TraceHitItem);
 	}
 }
 
