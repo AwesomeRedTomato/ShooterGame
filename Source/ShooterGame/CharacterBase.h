@@ -124,7 +124,7 @@ public:
 
 	/** 마우스 Pitch */
 	void LookUp(float Value);
-
+	
 public:
 	/** 재생할 랜덤 발사음 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -154,6 +154,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	bool bAiming;
 
+	/** 조준 버튼(마우스 우측 버튼) 눌림 여부 */
+	bool bAimingButtonPressed;
+
+private:
 	/** 디폴트 Fov */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float CameraDefaultFov;
@@ -177,6 +181,10 @@ public:
 	/** 조준 여부 리턴 */
 	FORCEINLINE bool GetAiming() const { return bAiming; }
 	FORCEINLINE ECombatState GetCombatState() const { return CombatState; }
+
+	/** 조준 */
+	void Aim();
+	void StopAiming();
 
 	/** Fire Button이 눌렸을 때 호출 */
 	void FireWeapon();
@@ -404,5 +412,4 @@ public:
 
 	/** 좌측Ctrl */
 	void CrouchButtonPressed();
-
 };

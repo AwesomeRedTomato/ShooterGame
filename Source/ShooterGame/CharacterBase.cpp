@@ -45,10 +45,11 @@ ACharacterBase::ACharacterBase()
 	BaseTurnRate = 45.0f;
 	BaseLookUpRate = 45.0f;
 
-	// 조준경 사용/미사용 Fov
+	// Fov
 	bAiming = false;
+	bAimingButtonPressed = false;
 	CameraDefaultFov = 0.0f; // BeginPlay에서 값 설정
-	CameraZoomedFov = 35.0f;
+	CameraZoomedFov = 50.0f;
 	CameraCurrentFov = 0.0f;
 	ZoomInterpSpeed = 20.0f;
 
@@ -270,6 +271,22 @@ void ACharacterBase::LookUp(float Value)
 	AddControllerPitchInput(Value * LookUpScaleFactor);
 }
 
+void ACharacterBase::Aim()
+{
+	bAiming = true;
+	GetCharacterMovement()->MaxWalkSpeed = CrouchMovementSpeed;
+
+}
+
+void ACharacterBase::StopAiming()
+{
+	bAiming = false;
+	if (!bCrouching)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+	}
+}
+
 void ACharacterBase::FireWeapon()
 {
 	if (EquippedWeapon == nullptr) return;
@@ -319,12 +336,17 @@ bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FHi
 
 void ACharacterBase::AimingButtonPressed()
 {
-	bAiming = true;
+	bAimingButtonPressed = true;
+	if (CombatState != ECombatState::ECS_Reloading)
+	{
+		Aim();
+	}
 }
 
 void ACharacterBase::AimingButtonReleased()
 {
-	bAiming = false;
+	bAimingButtonPressed = false;
+	StopAiming();
 }
 
 void ACharacterBase::CameraInterpZoom(float DeltaTime)
@@ -421,10 +443,16 @@ void ACharacterBase::ReloadButtonPressed()
 void ACharacterBase::ReloadWeapon()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	
 	if (EquippedWeapon == nullptr) return;
 
 	if (CarryingAmmo() && !EquippedWeapon->ClipIsFull())
 	{
+		if (bAiming)
+		{
+			StopAiming();
+		}
+
 		CombatState = ECombatState::ECS_Reloading;
 
 		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
@@ -439,6 +467,11 @@ void ACharacterBase::ReloadWeapon()
 void ACharacterBase::FinishReloading()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
+
+	if (bAimingButtonPressed)
+	{
+		Aim();
+	}
 
 	if (EquippedWeapon == nullptr) return;
 
