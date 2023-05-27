@@ -512,7 +512,7 @@ void ACharacterBase::GrabClip()
 {
 	if (EquippedWeapon == nullptr) return;
 	if (HandSceneComponent == nullptr) return;
-
+	
 
 	int32 ClipBoneIndex{ EquippedWeapon->GetItemMesh()->GetBoneIndex(EquippedWeapon->GetClipBoneName()) };
 	ClipTransform = EquippedWeapon->GetItemMesh()->GetBoneTransform(ClipBoneIndex);
@@ -527,6 +527,28 @@ void ACharacterBase::GrabClip()
 void ACharacterBase::ReleaseClip()
 {
 	EquippedWeapon->SetMovingClip(false);
+}
+
+void ACharacterBase::PickupAmmo(AAmmo* Ammo)
+{
+	EAmmoType AmmoType = Ammo->GetAmmoType();
+
+	if (AmmoMap.Find(AmmoType))
+	{
+		int32 AmmoCount{ AmmoMap[AmmoType] };
+		AmmoCount += Ammo->GetItemCount();
+		AmmoMap[AmmoType] = AmmoCount;
+	}
+
+	if (EquippedWeapon->GetAmmoType() == AmmoType)
+	{
+		if (EquippedWeapon->GetAmmo() == 0)
+		{
+			ReloadWeapon();
+		}
+	}
+
+	Ammo->Destroy();
 }
 
 void ACharacterBase::CrouchButtonPressed()
@@ -752,17 +774,21 @@ void ACharacterBase::TraceForItems()
 
 void ACharacterBase::GetPickupItem(AItemBase* Item)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Tracing Pickup Item and"));
-	auto Weapon = Cast<AWeaponBase>(Item);
+	if (Item->GetPickupSound())
+	{
+		UGameplayStatics::PlaySound2D(this, Item->GetPickupSound());
+	}
 
+	auto Weapon = Cast<AWeaponBase>(Item);
 	if (Weapon)
 	{
 		SwapWeapon(Weapon);
+	}
 
-		if (Weapon->GetPickupSound())
-		{
-			UGameplayStatics::PlaySound2D(this, Weapon->GetPickupSound());
-		}
+	auto Ammo = Cast<AAmmo>(Item);
+	if (Ammo)
+	{
+		PickupAmmo(Ammo);
 	}
 }
 
@@ -815,6 +841,7 @@ void ACharacterBase::SelectButtonPressed()
 	if (TraceHitItem)
 	{
 		GetPickupItem(TraceHitItem);
+		TraceHitItem = nullptr;
 	}
 }
 

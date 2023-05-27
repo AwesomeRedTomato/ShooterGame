@@ -93,7 +93,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	FString ItemName;
 
-	/** 아이템 개수(총알 등) */
+	/** 아이템 개수 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	int32 ItemCount;
 
@@ -101,7 +101,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	EItemRarity ItemRarity;
 
-	/** 활성화 된 등급 별 */
+	/** 활성 등급(별) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	TArray<bool> ActiveStars;
 
@@ -118,8 +118,6 @@ private:
 	bool bFalling;
 
 public:
-	/** 희귀도에 따른 등급 별 활성화 */
-public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE UBoxComponent* GetCollisionBox() const { return CollisionBox; }
@@ -127,8 +125,8 @@ public:
 	FORCEINLINE USkeletalMeshComponent* GetItemMesh() const { return Mesh; }
 	FORCEINLINE USoundCue* GetPickupSound() const { return PickupSound; }
 	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; }
+	FORCEINLINE int32 GetItemCount() const { return ItemCount; }
 
-	
 	/** 활성 등급(별) */
 	void SetActiveStars();
 

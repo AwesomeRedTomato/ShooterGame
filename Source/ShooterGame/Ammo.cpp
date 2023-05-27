@@ -11,11 +11,19 @@ AAmmo::AAmmo()
 	GetCollisionBox()->SetupAttachment(GetRootComponent());
 	GetPickupWidget()->SetupAttachment(GetRootComponent());
 	GetAreaSphere()->SetupAttachment(GetRootComponent());
+
+	AmmoCollisionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AmmoCollisionSphere"));
+	AmmoCollisionSphere->SetupAttachment(GetRootComponent());
+	AmmoCollisionSphere->SetSphereRadius(50.0f);
+
+	AmmoType = EAmmoType::EAT_9mm;
 }
 
 void AAmmo::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AmmoCollisionSphere->OnComponentBeginOverlap.AddDynamic(this, &AAmmo::AmmoSphereBeginOverlap);
 }
 
 void AAmmo::Tick(float DeltaTime)
@@ -61,4 +69,8 @@ void AAmmo::SetItemState(EItemState State)
 		AmmoMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
 	}
+}
+
+void AAmmo::AmmoSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
 }

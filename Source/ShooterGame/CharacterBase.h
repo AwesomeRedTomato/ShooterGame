@@ -378,6 +378,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ReleaseClip();
 
+	void PickupAmmo(AAmmo* Ammo);
+
 private:
 	/** ¾É±â ¿©ºÎ */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
