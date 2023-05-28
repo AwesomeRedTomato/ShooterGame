@@ -774,10 +774,7 @@ void ACharacterBase::TraceForItems()
 
 void ACharacterBase::GetPickupItem(AItemBase* Item)
 {
-	if (Item->GetPickupSound())
-	{
-		UGameplayStatics::PlaySound2D(this, Item->GetPickupSound());
-	}
+	Item->PlayPickupSound();
 
 	auto Weapon = Cast<AWeaponBase>(Item);
 	if (Weapon)

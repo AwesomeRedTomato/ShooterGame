@@ -3,6 +3,7 @@
 
 #include "ItemBase.h"
 #include "CharacterBase.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AItemBase::AItemBase()
@@ -261,4 +262,12 @@ void AItemBase::StopFalling()
 {
 	bFalling = false;
 	SetItemState(EItemState::EIS_Pickup);
+}
+
+void AItemBase::PlayPickupSound()
+{
+	if (PickupSound)
+	{
+		UGameplayStatics::PlaySound2D(this, PickupSound);
+	}
 }

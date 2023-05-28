@@ -87,8 +87,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	USoundCue* EquipSound;
 
-
-private:
 	/** 위젯에 바인딩 할 아이템 이름 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	FString ItemName;
@@ -138,4 +136,6 @@ public:
 
 	/** 아이템 낙하 완료 */
 	void StopFalling();
+
+	void PlayPickupSound();
 };

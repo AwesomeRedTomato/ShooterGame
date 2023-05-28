@@ -292,6 +292,7 @@ public:
 	/** 아이템 트레이스 */
 	void TraceForItems();
 
+	/** 아이템 줍기 */
 	void GetPickupItem(AItemBase* Item);
 
 private:
