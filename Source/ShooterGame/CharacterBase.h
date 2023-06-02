@@ -289,7 +289,7 @@ public:
 	/** Overlap 된 항목의 추가/삭제 */
 	void IncrementOverlappedItemCount(int8 Amount);
 
-	/** 아이템 트레이스 */
+	/** 아이템 라인 트레이스 */
 	void TraceForItems();
 
 	/** 아이템 줍기 */
@@ -308,7 +308,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	AItemBase* TraceHitItem;
 
-	/** 총알 타입 매핑 */
+	/** 총알 타입 Map */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	TMap<EAmmoType, int32> AmmoMap;
 
@@ -338,9 +338,11 @@ public:
 	/** 무기 해제 시 땅에 떨어뜨림 */
 	void DropWeapon();
 
+	/** 줍기 버튼(E) 눌렀을 때 실행 */
 	void SelectButtonPressed();
 	void SelectButtonReleased();
 
+	/** 무기 교체 */
 	void SwapWeapon(AWeaponBase* WeaponToSwap);
 
 	/** 발포음 재생 */
@@ -364,14 +366,14 @@ public:
 	/** 무기 재장전 */
 	void ReloadWeapon();
 
-	/** 재장전 끝날 때 호출 */
+	/** FinishReload 노티파이에 의해 호출 시 총알 개수 변경과 CombatState 변경 */
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 
 	/** 해당 무기 타입에 맞는 총알인지 확인 */
 	bool CarryingAmmo();
 
-	/** Grab Clip 노티파이에 의해 호출됨 */
+	/** GrabClip 노티파이에 의해 호출 시  */
 	UFUNCTION(BlueprintCallable)
 	void GrabClip();
 
@@ -379,6 +381,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void ReleaseClip();
 
+	/** 총알 획득 시 충전 및 재장전 */
 	void PickupAmmo(AAmmo* Ammo);
 
 private:
@@ -418,4 +421,5 @@ public:
 
 	/** 좌측Ctrl */
 	void CrouchButtonPressed();
+
 };

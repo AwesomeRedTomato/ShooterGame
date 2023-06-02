@@ -752,6 +752,7 @@ void ACharacterBase::TraceForItems()
 			if (TraceHitItem && TraceHitItem->GetPickupWidget())
 			{
 				TraceHitItem->GetPickupWidget()->SetVisibility(true);
+				TraceHitItem->EnableCustomDepth();
 			}
 
 			if (TraceHitItemLastFrame)
@@ -759,6 +760,7 @@ void ACharacterBase::TraceForItems()
 				if (TraceHitItem != TraceHitItemLastFrame)
 				{
 					TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+					TraceHitItemLastFrame->DisableCustomDepth();
 				}
 			}
 
@@ -769,12 +771,16 @@ void ACharacterBase::TraceForItems()
 	else if (TraceHitItemLastFrame)
 	{
 		TraceHitItemLastFrame->GetPickupWidget()->SetVisibility(false);
+		TraceHitItemLastFrame->DisableCustomDepth();
 	}
 }
 
 void ACharacterBase::GetPickupItem(AItemBase* Item)
 {
 	Item->PlayPickupSound();
+	
+	Item->DisableCustomDepth();
+	Item->DisableGlowMaterial();
 
 	auto Weapon = Cast<AWeaponBase>(Item);
 	if (Weapon)
@@ -830,6 +836,8 @@ void ACharacterBase::DropWeapon()
 
 		EquippedWeapon->SetItemState(EItemState::EIS_Falling);
 		EquippedWeapon->ThrowItem();
+
+		EquippedWeapon->EnableGlowMaterial();
 	}
 }
 

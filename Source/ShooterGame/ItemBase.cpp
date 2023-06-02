@@ -11,21 +11,21 @@ AItemBase::AItemBase()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// 메시
-	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
-	SetRootComponent(Mesh);
+	// Mesh
+	ItemMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Mesh"));
+	SetRootComponent(ItemMesh);
 
-	// 충돌체 Box
+	// Collsion Box
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
-	CollisionBox->SetupAttachment(Mesh);
+	CollisionBox->SetupAttachment(ItemMesh);
 	CollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
-	// 위젯
+	// Widget
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(GetRootComponent());
 
-	// Overlap 범위
+	// Overlap Sphere
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
 	AreaSphere->SetupAttachment(GetRootComponent());
 
@@ -39,6 +39,9 @@ AItemBase::AItemBase()
 	ThrowItemTime = 0.7f;
 	bFalling = false;
 
+	// Material
+	MaterialIndex = 0;
+	bCanChangeCustomDepth = true;
 }
 
 // Called when the game starts or when spawned
@@ -60,6 +63,9 @@ void AItemBase::BeginPlay()
 	AreaSphere->OnComponentEndOverlap.AddDynamic(this, &AItemBase::OnSphereEndOverlap);
 
 	SetItemProperties(ItemState);
+
+	// Custom Depth 비활성화
+	InitializeCustomDepth();
 }
 
 void AItemBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -95,8 +101,8 @@ void AItemBase::Tick(float DeltaTime)
 	if (ItemState == EItemState::EIS_Falling && bFalling)
 	{
 		// 아이템 낙하 시 수직 상태 고정
-		FRotator MeshRotation{ 0.0f, Mesh->GetComponentRotation().Yaw, 0.0f };
-		Mesh->SetWorldRotation(MeshRotation, false, nullptr, ETeleportType::TeleportPhysics);
+		FRotator MeshRotation{ 0.0f, ItemMesh->GetComponentRotation().Yaw, 0.0f };
+		ItemMesh->SetWorldRotation(MeshRotation, false, nullptr, ETeleportType::TeleportPhysics);
 	}
 }
 
@@ -157,11 +163,11 @@ void AItemBase::SetItemProperties(EItemState State)
 	switch (State)
 	{
 	case EItemState::EIS_Pickup:
-		Mesh->SetSimulatePhysics(false);
-		Mesh->SetEnableGravity(false);
-		Mesh->SetVisibility(true);
-		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		ItemMesh->SetSimulatePhysics(false);
+		ItemMesh->SetEnableGravity(false);
+		ItemMesh->SetVisibility(true);
+		ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		
 		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Overlap);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -174,11 +180,11 @@ void AItemBase::SetItemProperties(EItemState State)
 	case EItemState::EIS_Equipped:
 		PickupWidget->SetVisibility(false);
 
-		Mesh->SetSimulatePhysics(false);
-		Mesh->SetEnableGravity(false);
-		Mesh->SetVisibility(true);
-		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		ItemMesh->SetSimulatePhysics(false);
+		ItemMesh->SetEnableGravity(false);
+		ItemMesh->SetVisibility(true);
+		ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		
 		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -188,12 +194,12 @@ void AItemBase::SetItemProperties(EItemState State)
 		break;
 
 	case EItemState::EIS_Falling:
-		Mesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-		Mesh->SetSimulatePhysics(true);
-		Mesh->SetEnableGravity(true);
-		Mesh->SetVisibility(true);
-		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		Mesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic,	ECollisionResponse::ECR_Block);
+		ItemMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		ItemMesh->SetSimulatePhysics(true);
+		ItemMesh->SetEnableGravity(true);
+		ItemMesh->SetVisibility(true);
+		ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		ItemMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic,	ECollisionResponse::ECR_Block);
 		
 		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -205,11 +211,11 @@ void AItemBase::SetItemProperties(EItemState State)
 	case EItemState::EIS_EquipInterping:
 		PickupWidget->SetVisibility(false);
 		
-		Mesh->SetSimulatePhysics(false);
-		Mesh->SetEnableGravity(false);
-		Mesh->SetVisibility(true);
-		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		ItemMesh->SetSimulatePhysics(false);
+		ItemMesh->SetEnableGravity(false);
+		ItemMesh->SetVisibility(true);
+		ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		
 		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -221,11 +227,11 @@ void AItemBase::SetItemProperties(EItemState State)
 	case EItemState::EIS_PickedUp:
 		PickupWidget->SetVisibility(false);
 		
-		Mesh->SetSimulatePhysics(false);
-		Mesh->SetEnableGravity(false);
-		Mesh->SetVisibility(false);
-		Mesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-		Mesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		ItemMesh->SetSimulatePhysics(false);
+		ItemMesh->SetEnableGravity(false);
+		ItemMesh->SetVisibility(false);
+		ItemMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		
 		AreaSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -239,11 +245,11 @@ void AItemBase::SetItemProperties(EItemState State)
 void AItemBase::ThrowItem()
 {
 	// 캐릭터 기준 Yaw축 회전
-	FRotator MeshRotation{ 0.0f, Mesh->GetComponentRotation().Yaw, 0.0f };
-	Mesh->SetWorldRotation(MeshRotation, false, nullptr, ETeleportType::TeleportPhysics);
+	FRotator MeshRotation{ 0.0f, ItemMesh->GetComponentRotation().Yaw, 0.0f };
+	ItemMesh->SetWorldRotation(MeshRotation, false, nullptr, ETeleportType::TeleportPhysics);
 
-	const FVector MeshForward{ Mesh->GetForwardVector() };
-	const FVector MeshRight{ Mesh->GetRightVector() };
+	const FVector MeshForward{ ItemMesh->GetForwardVector() };
+	const FVector MeshRight{ ItemMesh->GetRightVector() };
 
 	// 아이템이 떨어질 방향
 	FVector ImpulseDirection = MeshRight.RotateAngleAxis(-30.0f, MeshForward);
@@ -251,7 +257,7 @@ void AItemBase::ThrowItem()
 
 	ImpulseDirection = ImpulseDirection.RotateAngleAxis(RandomRotation, FVector(0.0f, 0.0f, 1.0f));
 	ImpulseDirection *= 20'000.0f;
-	Mesh->AddImpulse(ImpulseDirection);
+	ItemMesh->AddImpulse(ImpulseDirection);
 
 	bFalling = true;
 	
@@ -269,5 +275,52 @@ void AItemBase::PlayPickupSound()
 	if (PickupSound)
 	{
 		UGameplayStatics::PlaySound2D(this, PickupSound);
+	}
+}
+
+void AItemBase::EnableCustomDepth()
+{
+	if (bCanChangeCustomDepth)
+	{
+		ItemMesh->SetRenderCustomDepth(true);
+	}
+}
+
+void AItemBase::DisableCustomDepth()
+{
+	if (bCanChangeCustomDepth)
+	{
+		ItemMesh->SetRenderCustomDepth(false);
+	}
+}
+
+void AItemBase::InitializeCustomDepth()
+{
+	DisableCustomDepth();
+}
+
+void AItemBase::OnConstruction(const FTransform& Transform)
+{
+	if (MaterialInstance)
+	{
+		DynamicMaterialInstance = UMaterialInstanceDynamic::Create(MaterialInstance, this);
+		ItemMesh->SetMaterial(MaterialIndex, DynamicMaterialInstance);
+	}
+	EnableGlowMaterial();
+}
+
+void AItemBase::EnableGlowMaterial()
+{
+	if (DynamicMaterialInstance)
+	{
+		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowBlendAlpha"), 0);
+	}
+}
+
+void AItemBase::DisableGlowMaterial()
+{
+	if (DynamicMaterialInstance)
+	{
+		DynamicMaterialInstance->SetScalarParameterValue(TEXT("GlowBlendAlpha"), 1);
 	}
 }

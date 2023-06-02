@@ -25,6 +25,16 @@ void AAmmo::BeginPlay()
 
 }
 
+void AAmmo::EnableCustomDepth()
+{
+	AmmoMesh->SetRenderCustomDepth(true);
+}
+
+void AAmmo::DisableCustomDepth()
+{
+	AmmoMesh->SetRenderCustomDepth(false);
+}
+
 void AAmmo::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
