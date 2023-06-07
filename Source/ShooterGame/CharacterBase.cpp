@@ -109,6 +109,9 @@ void ACharacterBase::BeginPlay()
 
 	// 기본 무기 스폰 후 소켓에 장착
 	EquipWeapon(SpawnDefaultWeapon());
+	Inventory.Add(EquippedWeapon);
+	EquippedWeapon->DisableCustomDepth();
+	EquippedWeapon->DisableGlowMaterial();
 
 	// 총알 초기화
 	InitializeAmmoMap();
@@ -785,7 +788,16 @@ void ACharacterBase::GetPickupItem(AItemBase* Item)
 	auto Weapon = Cast<AWeaponBase>(Item);
 	if (Weapon)
 	{
-		SwapWeapon(Weapon);
+		if (Inventory.Num() < INVENTORY_CAPACITY)
+		{
+			Inventory.Add(Weapon);
+			Weapon->SetItemState(EItemState::EIS_PickedUp);
+		}
+		// 인벤토리가 다 찼을 때 무기 교체
+		else
+		{
+			SwapWeapon(Weapon);
+		}
 	}
 
 	auto Ammo = Cast<AAmmo>(Item);

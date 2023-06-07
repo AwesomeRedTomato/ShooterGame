@@ -135,6 +135,14 @@ private:
 	/** Custom Depth 수정 가능 여부 */
 	bool bCanChangeCustomDepth;
 
+	/** 무기 아이콘 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	UTexture2D* WeaponIcon;
+
+	/** 총알 아이콘 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	UTexture2D* AmmoIcon;
+
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
@@ -164,4 +172,6 @@ public:
 
 	void EnableGlowMaterial();
 	void DisableGlowMaterial();
+
+
 };

@@ -422,4 +422,10 @@ public:
 	/** 좌측Ctrl */
 	void CrouchButtonPressed();
 
+private:
+	/** TArray 인벤토리 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	TArray<AWeaponBase*> Inventory;
+
+	const int32 INVENTORY_CAPACITY{ 5 };
 };
