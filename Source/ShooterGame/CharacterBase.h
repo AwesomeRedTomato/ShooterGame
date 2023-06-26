@@ -25,6 +25,8 @@ enum class ECombatState : uint8
 	ECS_MAX						UMETA(DisplayName = "DefaultMAX")
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FEquipItemDelegate, int32, CurrentSlotIndex, int32, NewSlotIndex);
+
 UCLASS()
 class SHOOTERGAME_API ACharacterBase : public ACharacter
 {
@@ -296,7 +298,7 @@ public:
 	void GetPickupItem(AItemBase* Item);
 
 private:
-	/** 현재 장착 중인 무기 */
+	/** 현재 장착중인 무기 수정 예정 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	AWeaponBase* EquippedWeapon;
 
@@ -427,5 +429,16 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 	TArray<AWeaponBase*> Inventory;
 
-	const int32 INVENTORY_CAPACITY{ 5 };
+	/** 장비 수용량(현재 장착 무기 포함) */
+	const int32 INVENTORY_CAPACITY{ 2 };
+
+	/** Delegate */
+	UPROPERTY(BlueprintAssignable, Category = "Delegates", meta = (AllowPrivateAccess = "true"))
+	FEquipItemDelegate EquipItemDelegate;
+
+public:
+	/** 장비 슬롯 변경 */
+	void OneKeyPressed();
+	void TwoKeyPressed();
+	void ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex);
 };

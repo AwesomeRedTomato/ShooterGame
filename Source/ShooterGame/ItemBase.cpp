@@ -42,6 +42,9 @@ AItemBase::AItemBase()
 	// Material
 	MaterialIndex = 0;
 	bCanChangeCustomDepth = true;
+
+	// æ∆¿Ã≈€ ΩΩ∑‘
+	SlotIndex = 0;
 }
 
 // Called when the game starts or when spawned

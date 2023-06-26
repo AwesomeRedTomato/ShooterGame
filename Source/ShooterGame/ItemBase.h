@@ -142,6 +142,10 @@ private:
 	/** 총알 아이콘 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 	UTexture2D* AmmoIcon;
+	 
+	/** 슬롯 번호 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
+	int32 SlotIndex;
 
 public:
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
@@ -152,6 +156,8 @@ public:
 	FORCEINLINE USoundCue* GetPickupSound() const { return PickupSound; }
 	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; }
 	FORCEINLINE int32 GetItemCount() const { return ItemCount; }
+	FORCEINLINE int32 GetSlotIndex() const { return SlotIndex; }
+	FORCEINLINE void SetSlotIndex(int32 Index) { SlotIndex = Index; }
 
 	/** 활성 등급(별 개수) */
 	void SetActiveStars();

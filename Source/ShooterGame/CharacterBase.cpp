@@ -108,11 +108,16 @@ void ACharacterBase::BeginPlay()
 	}
 
 	// 기본 무기 스폰 후 소켓에 장착
-	EquipWeapon(SpawnDefaultWeapon());
+	if (SpawnDefaultWeapon())
+	{
+		EquipWeapon(SpawnDefaultWeapon());
+
+	}
 	Inventory.Add(EquippedWeapon);
+	EquippedWeapon->SetSlotIndex(0);
 	EquippedWeapon->DisableCustomDepth();
 	EquippedWeapon->DisableGlowMaterial();
-
+	
 	// 총알 초기화
 	InitializeAmmoMap();
 }
@@ -200,6 +205,9 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("ReloadButton", EInputEvent::IE_Released, this, &ACharacterBase::ReloadButtonPressed);
 	
 	PlayerInputComponent->BindAction("Crouch", EInputEvent::IE_Pressed, this, &ACharacterBase::CrouchButtonPressed);
+
+	PlayerInputComponent->BindAction("1Key", EInputEvent::IE_Pressed, this, &ACharacterBase::OneKeyPressed);
+	PlayerInputComponent->BindAction("2Key", EInputEvent::IE_Pressed, this, &ACharacterBase::TwoKeyPressed);
 
 	// Bind Axis
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterBase::MoveForward);
@@ -575,6 +583,30 @@ void ACharacterBase::CrouchButtonPressed()
 	}
 }
 
+void ACharacterBase::OneKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 0) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 0);	
+}
+
+void ACharacterBase::TwoKeyPressed()
+{
+	if (EquippedWeapon->GetSlotIndex() == 1) return;
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 1);
+}
+
+void ACharacterBase::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex)
+{
+	if ((CurrentItemIndex == NewItemIndex) || (NewItemIndex >= Inventory.Num())) return;
+	
+	auto OldEquippedWeapon = EquippedWeapon;
+	auto NewWeapon = Cast<AWeaponBase>(Inventory[NewItemIndex]);
+	EquipWeapon(NewWeapon);
+
+	OldEquippedWeapon->SetItemState(EItemState::EIS_PickedUp);
+	NewWeapon->SetItemState(EItemState::EIS_Equipped);
+}
+
 void ACharacterBase::CalculateCrosshairSpread(float DeltaTime)
 {
 	// 십자선 고정
@@ -790,6 +822,7 @@ void ACharacterBase::GetPickupItem(AItemBase* Item)
 	{
 		if (Inventory.Num() < INVENTORY_CAPACITY)
 		{
+			Weapon->SetSlotIndex(Inventory.Num());
 			Inventory.Add(Weapon);
 			Weapon->SetItemState(EItemState::EIS_PickedUp);
 		}
@@ -834,6 +867,16 @@ void ACharacterBase::EquipWeapon(AWeaponBase* WeaponToEquip)
 			UGameplayStatics::PlaySound2D(this, WeaponToEquip->GetEquipSound());
 		}
 
+		if (EquippedWeapon == nullptr)
+		{
+			EquipItemDelegate.Broadcast(-1, WeaponToEquip->GetSlotIndex());
+		}
+		else
+		{
+			EquipItemDelegate.Broadcast(EquippedWeapon->GetSlotIndex(), WeaponToEquip->GetSlotIndex());
+		}
+
+
 		EquippedWeapon = WeaponToEquip;
 		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
 	}
@@ -868,6 +911,12 @@ void ACharacterBase::SelectButtonReleased()
 
 void ACharacterBase::SwapWeapon(AWeaponBase* WeaponToSwap)
 {
+	if (Inventory.Num() - 1 >= EquippedWeapon->GetSlotIndex())
+	{
+		Inventory[EquippedWeapon->GetSlotIndex()] = WeaponToSwap;
+		WeaponToSwap->SetSlotIndex(EquippedWeapon->GetSlotIndex());
+	}
+
 	DropWeapon();
 	EquipWeapon(WeaponToSwap);
 	TraceHitItem = nullptr;
