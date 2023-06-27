@@ -286,7 +286,6 @@ void ACharacterBase::Aim()
 {
 	bAiming = true;
 	GetCharacterMovement()->MaxWalkSpeed = CrouchMovementSpeed;
-
 }
 
 void ACharacterBase::StopAiming()
@@ -505,6 +504,11 @@ void ACharacterBase::FinishReloading()
 	}
 }
 
+void ACharacterBase::FinishEquipping()
+{
+	CombatState = ECombatState::ECS_Unoccupied;
+}
+
 bool ACharacterBase::CarryingAmmo()
 {
 	if (EquippedWeapon == nullptr) return false;
@@ -586,25 +590,36 @@ void ACharacterBase::CrouchButtonPressed()
 void ACharacterBase::OneKeyPressed()
 {
 	if (EquippedWeapon->GetSlotIndex() == 0) return;
+	
 	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 0);	
 }
 
 void ACharacterBase::TwoKeyPressed()
 {
 	if (EquippedWeapon->GetSlotIndex() == 1) return;
+
 	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 1);
 }
 
 void ACharacterBase::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex)
 {
-	if ((CurrentItemIndex == NewItemIndex) || (NewItemIndex >= Inventory.Num())) return;
-	
+	if ((CurrentItemIndex == NewItemIndex) || (NewItemIndex >= Inventory.Num()) || (CombatState == ECombatState::ECS_Reloading)) return;
+
 	auto OldEquippedWeapon = EquippedWeapon;
 	auto NewWeapon = Cast<AWeaponBase>(Inventory[NewItemIndex]);
 	EquipWeapon(NewWeapon);
 
 	OldEquippedWeapon->SetItemState(EItemState::EIS_PickedUp);
 	NewWeapon->SetItemState(EItemState::EIS_Equipped);
+
+	CombatState = ECombatState::ECS_Equipping;
+	
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && EquipMontage)
+	{
+		AnimInstance->Montage_Play(EquipMontage);
+		AnimInstance->Montage_JumpToSection(FName("Equip"));
+	}
 }
 
 void ACharacterBase::CalculateCrosshairSpread(float DeltaTime)
@@ -826,7 +841,7 @@ void ACharacterBase::GetPickupItem(AItemBase* Item)
 			Inventory.Add(Weapon);
 			Weapon->SetItemState(EItemState::EIS_PickedUp);
 		}
-		// 인벤토리가 다 찼을 때 무기 교체
+		// 인벤토리가 다 찼을 땐 무기 교체
 		else
 		{
 			SwapWeapon(Weapon);
@@ -851,7 +866,7 @@ AWeaponBase* ACharacterBase::SpawnDefaultWeapon()
 	return nullptr;
 }
 
-void ACharacterBase::EquipWeapon(AWeaponBase* WeaponToEquip)
+void ACharacterBase::EquipWeapon(AWeaponBase* WeaponToEquip, bool bSwapping)
 {
 	if (WeaponToEquip)
 	{
@@ -871,11 +886,10 @@ void ACharacterBase::EquipWeapon(AWeaponBase* WeaponToEquip)
 		{
 			EquipItemDelegate.Broadcast(-1, WeaponToEquip->GetSlotIndex());
 		}
-		else
+		else if(!bSwapping)
 		{
 			EquipItemDelegate.Broadcast(EquippedWeapon->GetSlotIndex(), WeaponToEquip->GetSlotIndex());
 		}
-
 
 		EquippedWeapon = WeaponToEquip;
 		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
@@ -918,7 +932,7 @@ void ACharacterBase::SwapWeapon(AWeaponBase* WeaponToSwap)
 	}
 
 	DropWeapon();
-	EquipWeapon(WeaponToSwap);
+	EquipWeapon(WeaponToSwap, true);
 	TraceHitItem = nullptr;
 	TraceHitItemLastFrame = nullptr;
 }

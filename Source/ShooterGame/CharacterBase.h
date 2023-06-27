@@ -21,6 +21,7 @@ enum class ECombatState : uint8
 	ECS_Unoccupied				UMETA(DisplayName = "Unoccupied"),
 	ECS_FireTimerInProgress		UMETA(DisplayName = "FireTimerInProgress"),
 	ECS_Reloading				UMETA(DisplayName = "Reloading"),
+	ECS_Equipping				UMETA(DisplayNmae = "Equipping"),
 
 	ECS_MAX						UMETA(DisplayName = "DefaultMAX")
 };
@@ -137,8 +138,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* HipFireMontage;
 	
+	/** 재장전 애니메이션 몽타주 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* ReloadMontage;
+
+	/** 무기 교체 애니메이션 몽타주 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UAnimMontage* EquipMontage;
 
 	/** 총구 이펙트 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -335,7 +341,7 @@ public:
 	AWeaponBase* SpawnDefaultWeapon();
 
 	/** 획득한 무기 장착 */
-	void EquipWeapon(AWeaponBase* WeaponToEquip);
+	void EquipWeapon(AWeaponBase* WeaponToEquip, bool bSwapping = false);
 
 	/** 무기 해제 시 땅에 떨어뜨림 */
 	void DropWeapon();
@@ -368,9 +374,13 @@ public:
 	/** 무기 재장전 */
 	void ReloadWeapon();
 
-	/** FinishReload 노티파이에 의해 호출 시 총알 개수 변경과 CombatState 변경 */
+	/** FinishReload 노티파이에 의해 호출 */
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+	
+	/** FinishEquipping 노티파이에 의해 호출*/
+	UFUNCTION(BlueprintCallable)
+	void FinishEquipping();
 
 	/** 해당 무기 타입에 맞는 총알인지 확인 */
 	bool CarryingAmmo();

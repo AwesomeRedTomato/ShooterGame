@@ -47,6 +47,7 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 	{
 		bCrouching = ShooterCharacter->GetCrouching();
 		bReloading = ShooterCharacter->GetCombatState() == ECombatState::ECS_Reloading;
+		bEquipping = ShooterCharacter->GetCombatState() == ECombatState::ECS_Equipping;
 
 		FVector Velocity = ShooterCharacter->GetVelocity();
 		Velocity.Z = 0;
