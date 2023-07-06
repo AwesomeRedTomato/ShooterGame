@@ -304,12 +304,57 @@ void AItemBase::InitializeCustomDepth()
 
 void AItemBase::OnConstruction(const FTransform& Transform)
 {
+	// Load Data Table
+	FString ColorTablePath(TEXT("DataTable'/Game/DataTable/DT_ItemColor.DT_ItemColor'"));
+	UDataTable* ColorTableObject = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, *ColorTablePath));
+
+	if (ColorTableObject)
+	{
+		FItemColorTable* ColorTable = nullptr;
+
+		switch (ItemType)
+		{
+		case EItemType::EIT_Weapon:
+			ColorTable = ColorTableObject->FindRow<FItemColorTable>("Weapon", TEXT(""));
+			break;
+
+		case EItemType::EIT_Ammo:
+			ColorTable = ColorTableObject->FindRow<FItemColorTable>("Ammo", TEXT(""));
+			break;
+
+		case EItemType::EIT_Potion:
+			ColorTable = ColorTableObject->FindRow<FItemColorTable>("Potion", TEXT(""));
+			break;
+
+		case EItemType::EIT_MAX:
+			break;
+
+		default:
+			break;
+		}
+
+		if (ColorTable)
+		{
+			GlowColor = ColorTable->GlowColor;
+			LightColor = ColorTable->LightColor;
+			DarkColor = ColorTable->DarkColor;
+			
+			if (GetItemMesh())
+			{
+				GetItemMesh()->SetCustomDepthStencilValue(ColorTable->CustomDepthStencil);
+			}
+		}
+	}
+
 	if (MaterialInstance)
 	{
 		DynamicMaterialInstance = UMaterialInstanceDynamic::Create(MaterialInstance, this);
+		DynamicMaterialInstance->SetVectorParameterValue(TEXT("FresnelColor"), GlowColor);
+		
 		ItemMesh->SetMaterial(MaterialIndex, DynamicMaterialInstance);
+
+		EnableGlowMaterial();
 	}
-	EnableGlowMaterial();
 }
 
 void AItemBase::EnableGlowMaterial()

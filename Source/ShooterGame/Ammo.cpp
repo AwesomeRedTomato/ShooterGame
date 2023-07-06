@@ -5,6 +5,8 @@
 
 AAmmo::AAmmo()
 {
+	SetItemType(EItemType::EIT_Ammo);
+
 	AmmoMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("AmmoMesh"));
 	SetRootComponent(AmmoMesh);
 

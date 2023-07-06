@@ -8,6 +8,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
 #include "Sound/SoundCue.h"
+#include "Engine/DataTable.h"
 #include "ItemBase.generated.h"
 
 UENUM(BlueprintType)
@@ -32,6 +33,35 @@ enum class EItemState : uint8
 	EIS_Falling			UMETA(DisplayName = "Falling"),
 
 	EIS_MAX				UMETA(DisplayName = "DefaultMAX"),
+};
+
+UENUM(BlueprintType)
+enum class EItemType : uint8
+{
+	EIT_Weapon		UMETA(DisplayName = "Weapon"),
+	EIT_Ammo		UMETA(DisplayName = "Ammo"),
+	EIT_Potion		UMETA(DisplayName = "Potion"),
+
+	EIT_MAX			UMETA(DisplayName = "DefaultMAX"),
+};
+
+USTRUCT(BlueprintType)
+struct FItemColorTable : public FTableRowBase
+{
+	GENERATED_BODY()
+	
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor GlowColor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor LightColor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FLinearColor DarkColor;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 CustomDepthStencil;
 };
 
 UCLASS()
@@ -92,6 +122,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	USoundCue* EquipSound;
 
+	/** 아이템 타입 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "DataTable", meta = (AllowPrivateAccess = "true"))
+	EItemType ItemType;
+
 	/** 위젯에 바인딩 할 아이템 이름 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = "true"))
 	FString ItemName;
@@ -147,7 +181,20 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Inventory", meta = (AllowPrivateAccess = "true"))
 	int32 SlotIndex;
 
+	/** 아이템 데이터 테이블 */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "DataTable", meta = (AllowPrivateAccess = "true"))
+	UDataTable* ItemColorDataTable;
+
+	/** 위젯에 표시할 색상 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DataTable", meta = (AllowPrivateAccess = "true"))
+	FLinearColor GlowColor;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DataTable", meta = (AllowPrivateAccess = "true"))
+	FLinearColor LightColor;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "DataTable", meta = (AllowPrivateAccess = "true"))
+	FLinearColor DarkColor;
+
 public:
+	/** Get */
 	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 	FORCEINLINE USphereComponent* GetAreaSphere() const { return AreaSphere; }
 	FORCEINLINE UBoxComponent* GetCollisionBox() const { return CollisionBox; }
@@ -157,7 +204,10 @@ public:
 	FORCEINLINE USoundCue* GetEquipSound() const { return EquipSound; }
 	FORCEINLINE int32 GetItemCount() const { return ItemCount; }
 	FORCEINLINE int32 GetSlotIndex() const { return SlotIndex; }
+	
+	/** Set */
 	FORCEINLINE void SetSlotIndex(int32 Index) { SlotIndex = Index; }
+	FORCEINLINE void SetItemType(EItemType Type) { ItemType = Type; }
 
 	/** 활성 등급(별 개수) */
 	void SetActiveStars();
@@ -178,6 +228,4 @@ public:
 
 	void EnableGlowMaterial();
 	void DisableGlowMaterial();
-
-
 };

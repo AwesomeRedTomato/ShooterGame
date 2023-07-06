@@ -5,6 +5,8 @@
 
 AWeaponBase::AWeaponBase()
 {
+	SetItemType(EItemType::EIT_Weapon);
+
 	Ammo = 30;
 	MagazineCapacity = 30;
 
