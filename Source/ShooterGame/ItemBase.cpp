@@ -304,6 +304,8 @@ void AItemBase::InitializeCustomDepth()
 
 void AItemBase::OnConstruction(const FTransform& Transform)
 {
+	Super::OnConstruction(Transform);
+
 	// Load Data Table
 	FString ColorTablePath(TEXT("DataTable'/Game/DataTable/DT_ItemColor.DT_ItemColor'"));
 	UDataTable* ColorTableObject = Cast<UDataTable>(StaticLoadObject(UDataTable::StaticClass(), nullptr, *ColorTablePath));

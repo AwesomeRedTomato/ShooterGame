@@ -26,6 +26,12 @@ struct FWeaponDataTable : public FTableRowBase
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString ItemName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USkeletalMesh* ItemMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	EAmmoType AmmoType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -41,19 +47,16 @@ struct FWeaponDataTable : public FTableRowBase
 	USoundCue* EquipSound;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UWidgetComponent* PickupWidget;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	USkeletalMesh* ItemMesh;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	FString ItemName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	UTexture2D* InventoryIcon;
-
+	UTexture2D* WeaponIcon;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UTexture2D* AmmoIcon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UMaterialInstance* MaterialInstance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 MaterialIndex;
 };
 
 UCLASS()
@@ -68,6 +71,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void OnConstruction(const FTransform& Transform) override;
 
 private:
 	/** 탄창에 든 총알 수 */
@@ -101,6 +106,9 @@ private:
 	/** 무기 데이터 테이블 */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	UDataTable* WeaponDataTable;
+
+	int32 PreviousMaterialIndex;
+
 public:
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
 	FORCEINLINE EAmmoType GetAmmoType() const { return AmmoType; }
