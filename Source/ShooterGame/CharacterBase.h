@@ -451,4 +451,6 @@ public:
 	void OneKeyPressed();
 	void TwoKeyPressed();
 	void ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex);
+
+	FORCEINLINE AWeaponBase* GetEquippedWeapon() const { return EquippedWeapon; }
 };

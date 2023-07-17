@@ -6,6 +6,7 @@
 #include "Animation/AnimInstance.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "CharacterBase.h"
+#include "WeaponType.h"
 #include "ShooterAnimInstance.generated.h"
 
 /**
@@ -121,4 +122,7 @@ private:
 	/** 이전 프레임에서의 캐릭터 상반신 회전(Yaw) */
 	FRotator CharacterRotationLastFrame;
 
+	/** 현재 장착 중인 무기 타입 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	EWeaponType EquippedWeaponType;
 };

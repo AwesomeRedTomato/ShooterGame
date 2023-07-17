@@ -93,9 +93,15 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		{
 			OffsetState = EOffsetState::EOS_Hip;
 		}
+
+		if (ShooterCharacter->GetEquippedWeapon())
+		{
+			AWeaponBase* EquipeedWeapon = ShooterCharacter->GetEquippedWeapon();
+			EquippedWeaponType = EquipeedWeapon->GetWeaponType();
+		}
+
 	}
 	TurnInPlace();
-
 	Lean(DeltaTime);
 }
 
