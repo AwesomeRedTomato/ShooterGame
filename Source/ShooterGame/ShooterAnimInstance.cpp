@@ -6,6 +6,8 @@
 
 UShooterAnimInstance::UShooterAnimInstance() 
 {
+	EquippedWeaponType= EWeaponType::EWT_MAX;
+
 	Speed = 0.0f;
 	MovementOffsetYaw = 0.0f;
 	LastMovementOffsetYaw = 0.0f;
@@ -14,6 +16,7 @@ UShooterAnimInstance::UShooterAnimInstance()
 	bIsAccelerating = false;
 	bAiming = false;
 	bReloading = false;
+	bShouldUseFABRIK = false;
 	
 	TIPCharacterYaw = 0.0f;
 	TIPCharacterYawLastFrame = 0.0f;
@@ -48,6 +51,9 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		bCrouching = ShooterCharacter->GetCrouching();
 		bReloading = ShooterCharacter->GetCombatState() == ECombatState::ECS_Reloading;
 		bEquipping = ShooterCharacter->GetCombatState() == ECombatState::ECS_Equipping;
+		bShouldUseFABRIK = 
+			ShooterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied ||
+			ShooterCharacter->GetCombatState() ==ECombatState::ECS_FireTimerInProgress;
 
 		FVector Velocity = ShooterCharacter->GetVelocity();
 		Velocity.Z = 0;

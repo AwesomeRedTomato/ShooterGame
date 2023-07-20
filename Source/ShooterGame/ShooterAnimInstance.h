@@ -67,6 +67,10 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bIsAccelerating;
 
+	/** 조준 여부 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bAiming;
+
 	/** 캐릭터 이동 Yaw 오프셋 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	float MovementOffsetYaw;
@@ -75,9 +79,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	float LastMovementOffsetYaw;
 
-	/** 조준 여부 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
-	bool bAiming;
+	/** 재장전 여부 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
+	bool bReloading;
 
 	/** 에임 오프셋 Yaw */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
@@ -87,22 +91,19 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
 	float Pitch;
 
-	/** 재장전 여부 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
-	bool bReloading;
-
 	/** Offset State */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = "true"))
 	EOffsetState OffsetState;
 	
-	/** 달릴 때 몸 기울기에 사용 */
+	/** 방향 틀 때 몸 기울기 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Lean", meta = (AllowPrivateAccess = "true"))
 	float YawDelta;
 
-	/** 반동 */
+	/** 반동 세기 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float RecoilWeight;
-			
+	
+	/** 제자리 회전 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	bool bTurningInPlace;
 
@@ -125,4 +126,8 @@ private:
 	/** 현재 장착 중인 무기 타입 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	EWeaponType EquippedWeaponType;
+
+	/** 재장전이나 장착중에는 FABRIK 적용하지 않음 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
+	bool bShouldUseFABRIK;
 };
