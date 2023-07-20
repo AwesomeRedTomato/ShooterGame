@@ -528,8 +528,6 @@ void ACharacterBase::GrabClip()
 	if (EquippedWeapon == nullptr) return;
 	if (HandSceneComponent == nullptr) return;
 
-	UE_LOG(LogTemp, Warning, TEXT("GrabClip"))
-
 	int32 ClipBoneIndex{ EquippedWeapon->GetItemMesh()->GetBoneIndex(EquippedWeapon->GetClipBoneName()) };
 	ClipTransform = EquippedWeapon->GetItemMesh()->GetBoneTransform(ClipBoneIndex);
 

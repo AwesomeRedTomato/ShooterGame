@@ -55,6 +55,7 @@ void AWeaponBase::OnConstruction(const FTransform& Transform)
 			break;
 		}
 
+		// Set Data Row
 		if (WeaponDataRow)
 		{
 			AmmoType = WeaponDataRow->AmmoType;
@@ -72,6 +73,13 @@ void AWeaponBase::OnConstruction(const FTransform& Transform)
 			SetMaterialIndex(WeaponDataRow->MaterialIndex);
 			SetClipBoneName(WeaponDataRow->ClipBoneName);
 			SetReloadMontageSection(WeaponDataRow->ReloadMontageSection);
+			GetItemMesh()->SetAnimInstanceClass(WeaponDataRow->AnimBP);
+
+			CrosshairsMiddle = WeaponDataRow->CrosshairsMiddle;
+			CrosshairsLeft	= WeaponDataRow->CrosshairsLeft;
+			CrosshairsRight = WeaponDataRow->CrosshairsRight;
+			CrosshairsTop = WeaponDataRow->CrosshairsTop;
+			CrosshairsBottom = WeaponDataRow->CrosshairsBottom;
 		}
 
 		if (GetMaterialInstance())
