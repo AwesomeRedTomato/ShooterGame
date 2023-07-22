@@ -26,6 +26,10 @@ void AWeaponBase::Tick(float DeltaTime)
 void AWeaponBase::BeginPlay()
 {
 	Super::BeginPlay();
+	if (BoneToHide != FName(""))
+	{
+		GetItemMesh()->HideBoneByName(BoneToHide, EPhysBodyOp::PBO_None);
+	}
 }
 
 void AWeaponBase::OnConstruction(const FTransform& Transform)
@@ -47,6 +51,10 @@ void AWeaponBase::OnConstruction(const FTransform& Transform)
 
 		case EWeaponType::EWT_AssaultRifle:
 			WeaponDataRow = WeaponTableObject->FindRow<FWeaponDataTable>(FName("AssaultRifle"), TEXT(""));
+			break;
+
+		case EWeaponType::EWT_Pistol:
+			WeaponDataRow = WeaponTableObject->FindRow<FWeaponDataTable>(FName("Pistol"), TEXT(""));
 			break;
 
 		case EWeaponType::EWT_MAX:
@@ -74,12 +82,16 @@ void AWeaponBase::OnConstruction(const FTransform& Transform)
 			SetClipBoneName(WeaponDataRow->ClipBoneName);
 			SetReloadMontageSection(WeaponDataRow->ReloadMontageSection);
 			GetItemMesh()->SetAnimInstanceClass(WeaponDataRow->AnimBP);
+			SetFireSound(WeaponDataRow->FireSound);
 
 			CrosshairsMiddle = WeaponDataRow->CrosshairsMiddle;
 			CrosshairsLeft	= WeaponDataRow->CrosshairsLeft;
 			CrosshairsRight = WeaponDataRow->CrosshairsRight;
 			CrosshairsTop = WeaponDataRow->CrosshairsTop;
 			CrosshairsBottom = WeaponDataRow->CrosshairsBottom;
+
+			BoneToHide = WeaponDataRow->BoneToHide;
+			GetItemMesh()->HideBoneByName(BoneToHide, PBO_None);
 		}
 
 		if (GetMaterialInstance())

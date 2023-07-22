@@ -130,10 +130,6 @@ public:
 	void LookUp(float Value);
 	
 public:
-	/** 재생할 랜덤 발사음 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	USoundCue* FireSound;
-
 	/** 발사 애니메이션 몽타주 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UAnimMontage* HipFireMontage;
@@ -241,11 +237,11 @@ private:
 	/** 좌클릭 시 */
 	bool bFireButtonPressed;
 
+	/** 자동 발사 */
+	float AutomaticFireRate;
+
 	/** True - 발사 가능. False - 발사 타이머가 작동 중 */
 	bool bShouldFire;
-
-	/** 자동 발사 초당 횟수 */
-	float AutomaticFireRate;
 
 	/** 자동 발사 타이머 */
 	FTimerHandle AutoFireTimer;

@@ -29,7 +29,7 @@ UShooterAnimInstance::UShooterAnimInstance()
 	CharacterRotationLastFrame = FRotator(0.0f);
 	YawDelta = 0.0f;
 
-	RecoilWeight = 0.7f;
+	RecoilWeight = 1.0f;
 	bTurningInPlace = false;
 	
 }

@@ -77,7 +77,7 @@ ACharacterBase::ACharacterBase()
 	// 자동 발사
 	bFireButtonPressed = false;
 	bShouldFire = true;
-	AutomaticFireRate = 0.1f;
+	AutomaticFireRate = 0.07f;
 
 	// 아이템 트레이스
 	bShouldTraceForItems = false;
@@ -390,9 +390,9 @@ void ACharacterBase::SetLookRates()
 void ACharacterBase::PlayFireSound()
 {
 	// 발포음 재생
-	if (FireSound)
+	if (EquippedWeapon->GetFireSound())
 	{
-		UGameplayStatics::PlaySound2D(this, FireSound);
+		UGameplayStatics::PlaySound2D(this, EquippedWeapon->GetFireSound());
 	}
 }
 

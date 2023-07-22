@@ -73,6 +73,12 @@ struct FWeaponDataTable : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UTexture2D* CrosshairsBottom;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FName BoneToHide;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USoundCue* FireSound;
 };
 
 UCLASS()
@@ -91,6 +97,8 @@ protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 
 private:
+
+
 	/** ÅºÃ¢¿¡ µç ÃÑ¾Ë ¼ö */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	int32 Ammo;
@@ -141,6 +149,14 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	UTexture2D* CrosshairsBottom;
 
+	/** ¼û±æ Bone ÀÌ¸§ */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	FName BoneToHide;
+	
+	/** ¹ßÆ÷À½ */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	USoundCue* FireSound;
+
 public:
 	/** Get */
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
@@ -149,10 +165,12 @@ public:
 	FORCEINLINE int32 GetMagazineCapacity() const { return MagazineCapacity; }
 	FORCEINLINE FName GetReloadMontageSection() const { return ReloadMontageSection; }
 	FORCEINLINE FName GetClipBoneName() const { return ClipBoneName; }
-	
+	FORCEINLINE USoundCue* GetFireSound() const { return FireSound; }
+
 	/** Set */
 	FORCEINLINE void SetClipBoneName(FName Name) { ClipBoneName = Name; }
 	FORCEINLINE void SetReloadMontageSection(FName Name) { ReloadMontageSection = Name; }
+	FORCEINLINE void SetFireSound(USoundCue* Sound) { FireSound = Sound; }
 
 	/** ÃÑ¾Ë °³¼ö °¨¼Ò */
 	void DecrementAmmo();
