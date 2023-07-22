@@ -77,7 +77,6 @@ ACharacterBase::ACharacterBase()
 	// 자동 발사
 	bFireButtonPressed = false;
 	bShouldFire = true;
-	AutomaticFireRate = 0.07f;
 
 	// 아이템 트레이스
 	bShouldTraceForItems = false;
@@ -92,6 +91,7 @@ ACharacterBase::ACharacterBase()
 
 	// HandSceneComponent
 	HandSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HandSceneComponent"));
+
 }
 
 // Called when the game starts or when spawned
@@ -183,6 +183,7 @@ void ACharacterBase::Tick(float DeltaTime)
 
 	// 캡슐 높이 보간
 	InterpCapsuleHalfHeight(DeltaTime);
+
 }
 
 // Called to bind functionality to input
@@ -405,9 +406,9 @@ void ACharacterBase::SendBullet()
 		FTransform SocketTransform = BarrelSocket->GetSocketTransform(EquippedWeapon->GetItemMesh());
 
 		// 총구 이펙트
-		if (MuzzleFlash)
+		if (EquippedWeapon->GetMuzzleFlash())
 		{
-			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, SocketTransform);
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), EquippedWeapon->GetMuzzleFlash(), SocketTransform);
 		}
 
 		// 총알 충돌 확인
@@ -705,9 +706,15 @@ void ACharacterBase::FireButtonReleased()
 
 void ACharacterBase::StartFireTimer()
 {
+	if (EquippedWeapon == nullptr) return;
+
 	CombatState = ECombatState::ECS_FireTimerInProgress;
 
-	GetWorldTimerManager().SetTimer(AutoFireTimer, this, &ACharacterBase::AutoFireReset, AutomaticFireRate);
+	GetWorldTimerManager().SetTimer(
+		AutoFireTimer, 
+		this, 
+		&ACharacterBase::AutoFireReset, 
+		EquippedWeapon->GetAutoFireRate());
 }
 
 void ACharacterBase::AutoFireReset()

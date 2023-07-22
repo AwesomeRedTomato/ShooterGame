@@ -83,6 +83,8 @@ void AWeaponBase::OnConstruction(const FTransform& Transform)
 			SetReloadMontageSection(WeaponDataRow->ReloadMontageSection);
 			GetItemMesh()->SetAnimInstanceClass(WeaponDataRow->AnimBP);
 			SetFireSound(WeaponDataRow->FireSound);
+			AutoFireRate = WeaponDataRow->AutoFireRate;
+			MuzzleFlash = WeaponDataRow->MuzzleFlash;
 
 			CrosshairsMiddle = WeaponDataRow->CrosshairsMiddle;
 			CrosshairsLeft	= WeaponDataRow->CrosshairsLeft;

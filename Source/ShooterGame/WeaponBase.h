@@ -79,6 +79,12 @@ struct FWeaponDataTable : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USoundCue* FireSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float AutoFireRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UParticleSystem* MuzzleFlash;
 };
 
 UCLASS()
@@ -97,7 +103,13 @@ protected:
 	virtual void OnConstruction(const FTransform& Transform) override;
 
 private:
+	/** 자동 발사 빈도 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	float AutoFireRate;
 
+	/** 총구 발사 이펙트 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* MuzzleFlash;
 
 	/** 탄창에 든 총알 수 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
@@ -157,6 +169,16 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	USoundCue* FireSound;
 
+	/** 권총 슬라이드 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float SlideDisplacement;
+
+	/** 슬라이드 커브 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	UCurveFloat* SlideDisplacementCurve;
+
+
+
 public:
 	/** Get */
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
@@ -166,11 +188,15 @@ public:
 	FORCEINLINE FName GetReloadMontageSection() const { return ReloadMontageSection; }
 	FORCEINLINE FName GetClipBoneName() const { return ClipBoneName; }
 	FORCEINLINE USoundCue* GetFireSound() const { return FireSound; }
+	FORCEINLINE float GetAutoFireRate() const { return AutoFireRate; }
+	FORCEINLINE UParticleSystem* GetMuzzleFlash() const { return MuzzleFlash; }
+
 
 	/** Set */
 	FORCEINLINE void SetClipBoneName(FName Name) { ClipBoneName = Name; }
 	FORCEINLINE void SetReloadMontageSection(FName Name) { ReloadMontageSection = Name; }
 	FORCEINLINE void SetFireSound(USoundCue* Sound) { FireSound = Sound; }
+
 
 	/** 총알 개수 감소 */
 	void DecrementAmmo();

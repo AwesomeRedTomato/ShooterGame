@@ -237,9 +237,6 @@ private:
 	/** 좌클릭 시 */
 	bool bFireButtonPressed;
 
-	/** 자동 발사 */
-	float AutomaticFireRate;
-
 	/** True - 발사 가능. False - 발사 타이머가 작동 중 */
 	bool bShouldFire;
 
@@ -298,6 +295,7 @@ public:
 
 	/** 아이템 줍기 */
 	void GetPickupItem(AItemBase* Item);
+
 
 private:
 	/** 현재 장착중인 무기 수정 예정 */
