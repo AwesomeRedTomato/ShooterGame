@@ -314,6 +314,11 @@ void ACharacterBase::FireWeapon()
 
 		// 발사 시 십자선 반동 효과
 		StartCrosshairBulletFire();
+
+		if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Pistol)
+		{
+			EquippedWeapon->StartSlideTimer();
+		}
 	}
 }
 
@@ -715,6 +720,7 @@ void ACharacterBase::StartFireTimer()
 		this, 
 		&ACharacterBase::AutoFireReset, 
 		EquippedWeapon->GetAutoFireRate());
+
 }
 
 void ACharacterBase::AutoFireReset()

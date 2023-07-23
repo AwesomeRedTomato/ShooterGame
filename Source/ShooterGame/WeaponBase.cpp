@@ -7,20 +7,32 @@ AWeaponBase::AWeaponBase()
 {
 	SetItemType(EItemType::EIT_Weapon);
 
+	// Ammmo
 	Ammo = 30;
 	MagazineCapacity = 30;
 
+	// Type
 	WeaponType = EWeaponType::EWT_SubmachineGun;
 	AmmoType = EAmmoType::EAT_9mm;
-	ReloadMontageSection = FName(TEXT("Reload SMG"));
 	
+	// Reload
+	ReloadMontageSection = FName(TEXT("Reload SMG"));
 	ClipBoneName = FName(TEXT("smg_clip"));
 	bMovingClip = false;
+	
+	// Slide
+	bMovingSlide = false;
+	SlideDisplacement = 0.0f;
+	MaxSlideDisplacement = 4.0f;
+	SlideDisplacementTime = 0.2f;
 }
 
 void AWeaponBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// 권총 슬라이드
+	UpdateSlideDisplacement();
 }
 
 void AWeaponBase::BeginPlay()
@@ -108,9 +120,37 @@ void AWeaponBase::OnConstruction(const FTransform& Transform)
 	}
 }
 
+void AWeaponBase::FinishMovingSlide()
+{
+	bMovingSlide = false;
+}
+
+void AWeaponBase::UpdateSlideDisplacement()
+{
+	if (SlideDisplacementCurve && bMovingSlide)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("UpdateSlide"));
+
+		const float ElapsedTime{ GetWorldTimerManager().GetTimerElapsed(SlideTimer) };
+		const float CurveValue{ SlideDisplacementCurve->GetFloatValue(ElapsedTime) };
+		SlideDisplacement = CurveValue * MaxSlideDisplacement;
+	}
+}
+
 bool AWeaponBase::ClipIsFull()
 {
 	return Ammo >= MagazineCapacity;
+}
+
+void AWeaponBase::StartSlideTimer()
+{
+	bMovingSlide = true;
+
+	GetWorldTimerManager().SetTimer(
+		SlideTimer,
+		this,
+		&AWeaponBase::FinishMovingSlide,
+		SlideDisplacement);
 }
 
 void AWeaponBase::DecrementAmmo()

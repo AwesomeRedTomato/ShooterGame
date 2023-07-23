@@ -102,6 +102,7 @@ protected:
 
 	virtual void OnConstruction(const FTransform& Transform) override;
 
+
 private:
 	/** 자동 발사 빈도 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
@@ -169,15 +170,25 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	USoundCue* FireSound;
 
-	/** 권총 슬라이드 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
-	float SlideDisplacement;
-
 	/** 슬라이드 커브 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* SlideDisplacementCurve;
 
+	/** 슬라이드 이동량 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float SlideDisplacement;
 
+	/** 최대 슬라이드 이동량 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	float MaxSlideDisplacement;
+
+	/** 권총 슬라이드 */
+	FTimerHandle SlideTimer;
+	float SlideDisplacementTime;
+
+	/** 슬라이드가 움직이면 true */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	bool bMovingSlide;
 
 public:
 	/** Get */
@@ -190,7 +201,6 @@ public:
 	FORCEINLINE USoundCue* GetFireSound() const { return FireSound; }
 	FORCEINLINE float GetAutoFireRate() const { return AutoFireRate; }
 	FORCEINLINE UParticleSystem* GetMuzzleFlash() const { return MuzzleFlash; }
-
 
 	/** Set */
 	FORCEINLINE void SetClipBoneName(FName Name) { ClipBoneName = Name; }
@@ -206,4 +216,8 @@ public:
 	void SetMovingClip(bool Move) { bMovingClip = Move; }
 	bool ClipIsFull();
 
+	/** 슬라이드 */
+	void StartSlideTimer();
+	void FinishMovingSlide();
+	void UpdateSlideDisplacement();
 };
