@@ -513,6 +513,10 @@ void ACharacterBase::FinishReloading()
 void ACharacterBase::FinishEquipping()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
+	if (bAimingButtonPressed)
+	{
+		Aim();
+	}
 }
 
 bool ACharacterBase::CarryingAmmo()
@@ -610,6 +614,11 @@ void ACharacterBase::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewIte
 {
 	if ((CurrentItemIndex == NewItemIndex) || (NewItemIndex >= Inventory.Num()) || (CombatState == ECombatState::ECS_Reloading)) return;
 
+	if (bAiming)
+	{
+		StopAiming();
+	}
+
 	auto OldEquippedWeapon = EquippedWeapon;
 	auto NewWeapon = Cast<AWeaponBase>(Inventory[NewItemIndex]);
 	EquipWeapon(NewWeapon);
@@ -698,10 +707,7 @@ void ACharacterBase::FinishCrosshairBulletFire()
 void ACharacterBase::FireButtonPressed()
 {
 	bFireButtonPressed = true;
-	if (WeaponHasAmmo())
-	{
-		StartFireTimer();
-	}
+	FireWeapon();
 }
 
 void ACharacterBase::FireButtonReleased()
@@ -726,13 +732,17 @@ void ACharacterBase::StartFireTimer()
 void ACharacterBase::AutoFireReset()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
+	if (EquippedWeapon == nullptr) return;
 
 	// 총알이 있으면 발사, 없으면 재장전
 	if (WeaponHasAmmo())
 	{
 		if (bFireButtonPressed)
 		{
-			FireWeapon();
+			if (bFireButtonPressed && EquippedWeapon->GetAutomatic())
+			{
+				FireWeapon();
+			}
 		}
 	}
 	else

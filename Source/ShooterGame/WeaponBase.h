@@ -85,6 +85,9 @@ struct FWeaponDataTable : public FTableRowBase
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UParticleSystem* MuzzleFlash;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bAutomatic;
 };
 
 UCLASS()
@@ -170,12 +173,16 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	USoundCue* FireSound;
 
+	/** 자동 발사 가능 여부 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	bool bAutomatic;
+
 	/** 슬라이드 커브 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* SlideDisplacementCurve;
 
 	/** 슬라이드 이동량 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
 	float SlideDisplacement;
 
 	/** 최대 슬라이드 이동량 */
@@ -190,6 +197,7 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
 	bool bMovingSlide;
 
+
 public:
 	/** Get */
 	FORCEINLINE int32 GetAmmo() const { return Ammo; }
@@ -201,6 +209,7 @@ public:
 	FORCEINLINE USoundCue* GetFireSound() const { return FireSound; }
 	FORCEINLINE float GetAutoFireRate() const { return AutoFireRate; }
 	FORCEINLINE UParticleSystem* GetMuzzleFlash() const { return MuzzleFlash; }
+	FORCEINLINE bool GetAutomatic() const { return bAutomatic; }
 
 	/** Set */
 	FORCEINLINE void SetClipBoneName(FName Name) { ClipBoneName = Name; }

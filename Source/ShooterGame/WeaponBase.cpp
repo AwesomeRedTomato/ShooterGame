@@ -25,6 +25,8 @@ AWeaponBase::AWeaponBase()
 	SlideDisplacement = 0.0f;
 	MaxSlideDisplacement = 4.0f;
 	SlideDisplacementTime = 0.2f;
+
+	bAutomatic = true;
 }
 
 void AWeaponBase::Tick(float DeltaTime)
@@ -97,6 +99,7 @@ void AWeaponBase::OnConstruction(const FTransform& Transform)
 			SetFireSound(WeaponDataRow->FireSound);
 			AutoFireRate = WeaponDataRow->AutoFireRate;
 			MuzzleFlash = WeaponDataRow->MuzzleFlash;
+			bAutomatic = WeaponDataRow->bAutomatic;
 
 			CrosshairsMiddle = WeaponDataRow->CrosshairsMiddle;
 			CrosshairsLeft	= WeaponDataRow->CrosshairsLeft;
