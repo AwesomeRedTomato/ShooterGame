@@ -636,6 +636,24 @@ void ACharacterBase::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewIte
 	}
 }
 
+void ACharacterBase::Footstep()
+{
+	FHitResult HitResult;
+	const FVector Start{ GetActorLocation() };
+	const FVector End{ Start + FVector(0.0f, 0.0f, -400.0f) };
+	FCollisionQueryParams QueryParams;
+	QueryParams.bReturnPhysicalMaterial = true;
+
+	GetWorld()->LineTraceSingleByChannel(
+		HitResult,
+		Start,
+		End,
+		ECollisionChannel::ECC_Visibility,
+		QueryParams);
+
+	UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitResult.GetActor()->GetName());
+}
+
 void ACharacterBase::CalculateCrosshairSpread(float DeltaTime)
 {
 	// 십자선 고정

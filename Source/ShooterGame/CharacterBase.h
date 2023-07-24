@@ -447,4 +447,8 @@ public:
 	void ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewItemIndex);
 
 	FORCEINLINE AWeaponBase* GetEquippedWeapon() const { return EquippedWeapon; }
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void Footstep();
 };
