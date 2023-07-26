@@ -13,6 +13,8 @@
 #include "WeaponBase.h"
 #include "AmmoType.h"
 #include "Ammo.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
+#include "ShooterGame.h"
 #include "CharacterBase.generated.h"
 
 UENUM(BlueprintType)
@@ -450,5 +452,6 @@ public:
 
 public:
 	UFUNCTION(BlueprintCallable)
-	void Footstep();
+	EPhysicalSurface GetSurfaceType();
+
 };

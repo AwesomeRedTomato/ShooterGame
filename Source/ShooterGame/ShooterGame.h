@@ -4,6 +4,6 @@
 
 #include "CoreMinimal.h"
 
-#define Sand	EPhysicalSurface::SurfaceType1
-#define Stone	EPhysicalSurface::SurfaceType2
-#define Wood	EPhysicalSurface::SurfaceType3
+#define EPS_Sand	EPhysicalSurface::SurfaceType1
+#define EPS_Stone	EPhysicalSurface::SurfaceType2
+#define EPS_Wood	EPhysicalSurface::SurfaceType3

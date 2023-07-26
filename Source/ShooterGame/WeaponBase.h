@@ -177,6 +177,15 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
 	bool bAutomatic;
 
+	/** 데미지 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	float Damage;
+
+	/** 치명타 데미지 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon", meta = (AllowPrivateAccess = "true"))
+	float HeadShotDamage;
+
+public:
 	/** 슬라이드 커브 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pistol", meta = (AllowPrivateAccess = "true"))
 	UCurveFloat* SlideDisplacementCurve;
@@ -210,6 +219,8 @@ public:
 	FORCEINLINE float GetAutoFireRate() const { return AutoFireRate; }
 	FORCEINLINE UParticleSystem* GetMuzzleFlash() const { return MuzzleFlash; }
 	FORCEINLINE bool GetAutomatic() const { return bAutomatic; }
+	FORCEINLINE float GetDamage() const { return Damage; }
+	FORCEINLINE float GetHeadShotDamage() const { return HeadShotDamage; }
 
 	/** Set */
 	FORCEINLINE void SetClipBoneName(FName Name) { ClipBoneName = Name; }
@@ -229,4 +240,5 @@ public:
 	void StartSlideTimer();
 	void FinishMovingSlide();
 	void UpdateSlideDisplacement();
+
 };

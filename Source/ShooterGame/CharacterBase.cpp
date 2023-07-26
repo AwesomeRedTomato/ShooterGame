@@ -3,6 +3,8 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "DrawDebugHelpers.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "BulletHitInterface.h"
+#include "Enemy.h"
 
 // Sets default values
 ACharacterBase::ACharacterBase()
@@ -336,9 +338,13 @@ bool ACharacterBase::GetBeamEndLocation(const FVector& MuzzleSocketLocation, FHi
 
 	const FVector WeaponTraceStart{ MuzzleSocketLocation };
 	const FVector WeaponTraceEnd{ OutBeamLocation };
-	
-	GetWorld()->LineTraceSingleByChannel(OutHitResult, WeaponTraceStart, WeaponTraceEnd, ECollisionChannel::ECC_Visibility);
-	
+
+	GetWorld()->LineTraceSingleByChannel(
+		OutHitResult,
+		WeaponTraceStart,
+		WeaponTraceEnd,
+		ECollisionChannel::ECC_Visibility);
+
 	if (!OutHitResult.bBlockingHit)
 	{
 		OutHitResult.Location = OutBeamLocation;
@@ -422,10 +428,36 @@ void ACharacterBase::SendBullet()
 
 		if (bBeamEnd)
 		{
-			if (ImpactParticles)
+			// 총알 충돌 지점 Particle
+			if (BeamHitResult.Actor.IsValid())
 			{
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, BeamHitResult.Location);
+				IBulletHitInterface* BulletHitInterface = Cast<IBulletHitInterface>(BeamHitResult.Actor);
+
+				if (BulletHitInterface)
+				{
+					BulletHitInterface->BulletHit_Implementation(BeamHitResult);
+				}
+
+				AEnemy* HitEnemy = Cast<AEnemy>(BeamHitResult.Actor);
+				if (HitEnemy)
+				{
+					UGameplayStatics::ApplyDamage(
+						HitEnemy, 
+						EquippedWeapon->GetDamage(), 
+						GetController(), 
+						this, 
+						UDamageType::StaticClass());
+				}
+
 			}
+			else
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(
+					GetWorld(),
+					ImpactParticles,
+					BeamHitResult.Location);
+			}
+
 
 			UParticleSystemComponent* Beam =
 				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticles, SocketTransform);
@@ -636,7 +668,7 @@ void ACharacterBase::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewIte
 	}
 }
 
-void ACharacterBase::Footstep()
+EPhysicalSurface ACharacterBase::GetSurfaceType()
 {
 	FHitResult HitResult;
 	const FVector Start{ GetActorLocation() };
@@ -651,7 +683,7 @@ void ACharacterBase::Footstep()
 		ECollisionChannel::ECC_Visibility,
 		QueryParams);
 
-	UE_LOG(LogTemp, Warning, TEXT("Hit Actor: %s"), *HitResult.GetActor()->GetName());
+	return UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
 }
 
 void ACharacterBase::CalculateCrosshairSpread(float DeltaTime)
@@ -794,9 +826,7 @@ bool ACharacterBase::TraceUnderCrosshairs(FHitResult& OutHitResult, FVector& Out
 		const FVector Start{ CrosshairWorldPosition };
 		const FVector End{ Start + CrosshairWorldDirection * 50'000.f };
 		OutHitLocation = End;
-
 		GetWorld()->LineTraceSingleByChannel(OutHitResult, Start, End, ECollisionChannel::ECC_Visibility);
-		
 		if (OutHitResult.bBlockingHit)
 		{
 			OutHitLocation = OutHitResult.Location;

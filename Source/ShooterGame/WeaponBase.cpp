@@ -132,8 +132,6 @@ void AWeaponBase::UpdateSlideDisplacement()
 {
 	if (SlideDisplacementCurve && bMovingSlide)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("UpdateSlide"));
-
 		const float ElapsedTime{ GetWorldTimerManager().GetTimerElapsed(SlideTimer) };
 		const float CurveValue{ SlideDisplacementCurve->GetFloatValue(ElapsedTime) };
 		SlideDisplacement = CurveValue * MaxSlideDisplacement;
