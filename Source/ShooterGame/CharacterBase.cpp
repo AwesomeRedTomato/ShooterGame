@@ -441,14 +441,25 @@ void ACharacterBase::SendBullet()
 				AEnemy* HitEnemy = Cast<AEnemy>(BeamHitResult.Actor);
 				if (HitEnemy)
 				{
-					UGameplayStatics::ApplyDamage(
-						HitEnemy, 
-						EquippedWeapon->GetDamage(), 
-						GetController(), 
-						this, 
-						UDamageType::StaticClass());
+					if (BeamHitResult.BoneName.ToString() == HitEnemy->GetHeadBone())
+					{
+						UGameplayStatics::ApplyDamage(
+							HitEnemy,
+							EquippedWeapon->GetHeadShotDamage(),
+							GetController(),
+							this,
+							UDamageType::StaticClass());
+					}
+					else
+					{
+						UGameplayStatics::ApplyDamage(
+							HitEnemy,
+							EquippedWeapon->GetDamage(),
+							GetController(),
+							this,
+							UDamageType::StaticClass());
+					}
 				}
-
 			}
 			else
 			{

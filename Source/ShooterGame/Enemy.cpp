@@ -11,8 +11,12 @@ AEnemy::AEnemy()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	Health = 100.0f;
-	MaxHealth = 100.0f;
+	Health = 200.0f;
+	MaxHealth = 200.0f;
+	HealthBarDisplayTime = 2.0f;
+
+	DestroyTime = 5.0f;
+	HitReactTime = 0.5f;
 }
 
 // Called when the game starts or when spawned
@@ -56,13 +60,17 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 			FRotator(0.0f), 
 			true);
 	}
+
+	ShowHealthBar();
+	PlayHitMontage(FName("HitreactFront"), 0.5f);
 }
-//
+
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (Health - DamageAmount <= 0.0f)
 	{
 		Health = 0.0f;
+		Die();
 	}
 	else
 	{
@@ -72,3 +80,43 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 	return DamageAmount;
 }
 
+void AEnemy::ShowHealthBar_Implementation()
+{
+	GetWorldTimerManager().ClearTimer(HealthBarTimer);
+	
+	GetWorldTimerManager().SetTimer(
+		HealthBarTimer, 
+		this, 
+		&AEnemy::HideHealthBar, 
+		HealthBarDisplayTime);
+}
+
+void AEnemy::Die()
+{
+	HideHealthBar();
+
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
+
+	GetWorldTimerManager().SetTimer(
+		DestroyTimer,
+		this,
+		&AEnemy::Destroy,
+		DestroyTime);
+}
+
+void AEnemy::Destroy()
+{
+	AActor::Destroy();
+}
+
+void AEnemy::PlayHitMontage(FName Section, float PlayRate)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance)
+	{
+		AnimInstance->Montage_Play(HitMontage, PlayRate);
+		AnimInstance->Montage_JumpToSection(Section, HitMontage);
+	}
+}

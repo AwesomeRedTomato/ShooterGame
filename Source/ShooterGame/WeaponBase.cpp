@@ -109,6 +109,9 @@ void AWeaponBase::OnConstruction(const FTransform& Transform)
 
 			BoneToHide = WeaponDataRow->BoneToHide;
 			GetItemMesh()->HideBoneByName(BoneToHide, PBO_None);
+
+			Damage = WeaponDataRow->Damage;
+			HeadShotDamage = WeaponDataRow->HeadShotDamage;
 		}
 
 		if (GetMaterialInstance())
