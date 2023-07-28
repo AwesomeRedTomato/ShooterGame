@@ -87,5 +87,6 @@ private:
 	FTimerHandle HitReactTimer;
 
 public:
+	// Get
 	FORCEINLINE FString GetHeadBone() const { return HeadBone; }
 };

@@ -156,6 +156,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	UParticleSystem* BeamParticles;
 
+	/** 헤드샷 사운드 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	USoundCue* CriticalHitSound;
+
 private:
 	/** 조준 여부 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))

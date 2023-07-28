@@ -97,6 +97,7 @@ void AEnemy::Die()
 
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
+	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
 	GetWorldTimerManager().SetTimer(
 		DestroyTimer,
