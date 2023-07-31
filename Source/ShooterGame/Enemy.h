@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "Sound/SoundCue.h"
 #include "BulletHitInterface.h"
+#include "BehaviorTree/BehaviorTree.h"
+#include "EnemyController.h"
 #include "Enemy.generated.h"
 
 UCLASS()
@@ -86,7 +88,17 @@ private:
 	float HitReactTime;
 	FTimerHandle HitReactTimer;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true"))
+	UBehaviorTree* BehaviorTree;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
+	FVector PatrolPoint;
+
+	AEnemyController* EnemyController;
+
 public:
 	// Get
 	FORCEINLINE FString GetHeadBone() const { return HeadBone; }
+	FORCEINLINE UBehaviorTree* GetBehaviorTree() const { return BehaviorTree; }
+
 };

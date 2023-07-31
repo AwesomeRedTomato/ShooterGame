@@ -4,6 +4,10 @@
 #include "Enemy.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/CapsuleComponent.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/BehaviorTreeComponent.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -24,10 +28,20 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	GetMesh()->SetCollisionResponseToChannel(
-		ECollisionChannel::ECC_Visibility,
-		ECollisionResponse::ECR_Block);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
+	EnemyController = Cast<AEnemyController>(GetController());
+
+	const FVector WorldPatrolPoint = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint);
+
+	DrawDebugSphere(GetWorld(), WorldPatrolPoint, 25.0f, 12, FColor::Blue, true);
+
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsVector(TEXT("PatrolPoint"), WorldPatrolPoint);
+
+		EnemyController->RunBehaviorTree(BehaviorTree);
+	}
 }
 
 // Called every frame
