@@ -8,6 +8,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "DrawDebugHelpers.h"
+#include "CharacterBase.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -21,6 +22,12 @@ AEnemy::AEnemy()
 
 	DestroyTime = 5.0f;
 	HitReactTime = 0.5f;
+
+	StunChance = 0.5f;
+
+	AgroSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AgroSphere"));
+	AgroSphere->SetupAttachment(GetRootComponent());
+
 }
 
 // Called when the game starts or when spawned
@@ -28,19 +35,37 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::AgroSphereBeginOverlap);
+
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	EnemyController = Cast<AEnemyController>(GetController());
 
-	const FVector WorldPatrolPoint = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint);
 
+	const FVector WorldPatrolPoint = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint);
+	const FVector WorldPatrolPoint2 = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint2);
+	
 	DrawDebugSphere(GetWorld(), WorldPatrolPoint, 25.0f, 12, FColor::Blue, true);
+	DrawDebugSphere(GetWorld(), WorldPatrolPoint2, 25.0f, 12, FColor::Red, true);
 
 	if (EnemyController)
 	{
 		EnemyController->GetBlackboardComponent()->SetValueAsVector(TEXT("PatrolPoint"), WorldPatrolPoint);
-
+		EnemyController->GetBlackboardComponent()->SetValueAsVector(TEXT("PatrolPoint2"), WorldPatrolPoint2);
 		EnemyController->RunBehaviorTree(BehaviorTree);
+	}
+}
+
+void AEnemy::AgroSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	
+	if (OtherActor == nullptr) return;
+
+
+	ACharacterBase* Character = Cast<ACharacterBase>(OtherActor);
+	if (Character)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsObject(TEXT("Target"), Character);
 	}
 }
 
@@ -76,7 +101,13 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 	}
 
 	ShowHealthBar();
-	PlayHitMontage(FName("HitreactFront"), 0.5f);
+	
+	const float Stunned = FMath::FRandRange(0.0f, 1.0f);
+	if (Stunned <= StunChance)
+	{
+		PlayHitMontage(FName("HitreactFront"), 0.5f);
+		SetStunned(true);
+	}
 }
 
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -133,5 +164,26 @@ void AEnemy::PlayHitMontage(FName Section, float PlayRate)
 	{
 		AnimInstance->Montage_Play(HitMontage, PlayRate);
 		AnimInstance->Montage_JumpToSection(Section, HitMontage);
+	}
+}
+
+void AEnemy::PlayHipFireMontage()
+{
+	// 총 반동 애니메이션 몽타주 재생
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if (AnimInstance && HipFireMontage)
+	{
+		AnimInstance->Montage_Play(HipFireMontage);
+		AnimInstance->Montage_JumpToSection(FName(TEXT("StartFire")));
+	}
+}
+
+void AEnemy::SetStunned(bool Stunned)
+{
+	bStunned = Stunned;
+
+	if (EnemyController)
+	{
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(TEXT("Stunned"), Stunned);
 	}
 }

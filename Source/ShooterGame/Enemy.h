@@ -8,6 +8,7 @@
 #include "BulletHitInterface.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "EnemyController.h"
+#include "Components/SphereComponent.h"
 #include "Enemy.generated.h"
 
 UCLASS()
@@ -22,6 +23,15 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	
+	UFUNCTION()
+	void AgroSphereBeginOverlap(
+		UPrimitiveComponent* OverlappedComponent,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex,
+		bool bFromSweep,
+		const FHitResult& SweepResult);
 
 public:	
 	// Called every frame
@@ -43,12 +53,26 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void HideHealthBar();
 
+	/** 사망 */
 	void Die();
+	/** 사망 시 소멸 */
 	void Destroy();
 
+	/** 피격 몽타주 재생 */
 	void PlayHitMontage(FName Section, float PlayRate);
 
+	UFUNCTION(BlueprintCallable)
+	void PlayHipFireMontage();
+
+	UFUNCTION(BlueprintCallable)
+	void SetStunned(bool Stunned);
+
+
 private:
+	/** 적 인식 충돌 구 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	USphereComponent* AgroSphere;
+
 	/** 피격 파티클 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* ImpactParticles;
@@ -88,13 +112,40 @@ private:
 	float HitReactTime;
 	FTimerHandle HitReactTimer;
 
+	/** 피격 시 스턴 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
+	bool bStunned;
+
+	/** 일정 확률로 피격 시 스턴 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
+	float StunChance;
+
+	/** 공격 범위 안에 있는지 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
+	bool bFireFinish;
+
+	/** 총알 연기 트레일 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
+	UParticleSystem* BeamParticles;
+
+	/** 발사 애니메이션 몽타주 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
+	UAnimMontage* HipFireMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
+	bool bInSight;
+
+	AEnemyController* EnemyController;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true"))
 	UBehaviorTree* BehaviorTree;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
 	FVector PatrolPoint;
 
-	AEnemyController* EnemyController;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
+	FVector PatrolPoint2;
+
 
 public:
 	// Get
