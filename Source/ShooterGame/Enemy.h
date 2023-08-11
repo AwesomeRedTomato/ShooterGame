@@ -33,6 +33,13 @@ protected:
 		bool bFromSweep,
 		const FHitResult& SweepResult);
 
+	UFUNCTION()
+		void AgroSphereEndOverlap(
+			UPrimitiveComponent* OverlappedComponent, 
+			AActor* OtherActor, 
+			UPrimitiveComponent* OtherComp, 
+			int32 OtherBodyIndex);
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -58,6 +65,9 @@ public:
 	/** 사망 시 소멸 */
 	void Destroy();
 
+	UFUNCTION(BlueprintCallable)
+	void Fire(AActor* Target);
+
 	/** 피격 몽타주 재생 */
 	void PlayHitMontage(FName Section, float PlayRate);
 
@@ -67,15 +77,18 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SetStunned(bool Stunned);
 
-
 private:
-	/** 적 인식 충돌 구 */
+	/** 적 인식 충돌체 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	USphereComponent* AgroSphere;
 
 	/** 피격 파티클 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* ImpactParticles;
+
+	/** 트레일 파티클 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* BeamParticles;
 
 	/** 피격 사운드 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
@@ -124,14 +137,15 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
 	bool bFireFinish;
 
-	/** 총알 연기 트레일 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
-	UParticleSystem* BeamParticles;
-
 	/** 발사 애니메이션 몽타주 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
 	UAnimMontage* HipFireMontage;
 
+	/** 총알 트레일 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat ", meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* BeamParticle;
+
+	/** 시야 범위 내에 들었으면 True */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
 	bool bInSight;
 
@@ -145,7 +159,6 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
 	FVector PatrolPoint2;
-
 
 public:
 	// Get

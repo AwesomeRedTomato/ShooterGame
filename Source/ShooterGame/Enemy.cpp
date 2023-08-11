@@ -9,6 +9,8 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "DrawDebugHelpers.h"
 #include "CharacterBase.h"
+#include "Engine/SkeletalMeshSocket.h"
+#include "Particles/ParticleSystemComponent.h"
 
 // Sets default values
 AEnemy::AEnemy()
@@ -36,11 +38,13 @@ void AEnemy::BeginPlay()
 	Super::BeginPlay();
 	
 	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::AgroSphereBeginOverlap);
+	AgroSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::AgroSphereEndOverlap);
 
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
 	EnemyController = Cast<AEnemyController>(GetController());
-
 
 	const FVector WorldPatrolPoint = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint);
 	const FVector WorldPatrolPoint2 = UKismetMathLibrary::TransformLocation(GetActorTransform(), PatrolPoint2);
@@ -58,15 +62,20 @@ void AEnemy::BeginPlay()
 
 void AEnemy::AgroSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	
 	if (OtherActor == nullptr) return;
-
 
 	ACharacterBase* Character = Cast<ACharacterBase>(OtherActor);
 	if (Character)
 	{
 		EnemyController->GetBlackboardComponent()->SetValueAsObject(TEXT("Target"), Character);
 	}
+}
+
+void AEnemy::AgroSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor == nullptr) return;
+
+	EnemyController->GetBlackboardComponent()->SetValueAsObject(TEXT("Target"), nullptr);
 }
 
 // Called every frame
@@ -154,6 +163,40 @@ void AEnemy::Die()
 void AEnemy::Destroy()
 {
 	AActor::Destroy();
+}
+
+void AEnemy::Fire(AActor* Target)
+{
+	FHitResult HitResult;
+	const USkeletalMeshSocket* BarrelSocket = GetMesh()->GetSocketByName("BarrelSocket");
+	
+	if (BarrelSocket)
+	{
+		FTransform BarrelTransform = BarrelSocket->GetSocketTransform(GetMesh());
+
+		FVector Start{ BarrelTransform.GetLocation() };
+		FVector End{ Target->GetActorLocation() };
+
+		GetWorld()->LineTraceSingleByChannel(
+			HitResult,
+			Start,
+			End,
+			ECollisionChannel::ECC_Visibility);
+
+		// DrawDebugLine(GetWorld(), Start, End, FColor::Green, true, -1, 0, 10);
+
+		UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticle, BarrelTransform);
+
+		if (Beam)
+		{
+			Beam->SetVectorParameter(FName("Target"), End);
+		}
+
+		if (HitResult.bBlockingHit)
+		{
+			// TODO: Damage Player
+		}
+	}
 }
 
 void AEnemy::PlayHitMontage(FName Section, float PlayRate)
