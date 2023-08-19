@@ -55,6 +55,12 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		class AController* EventInstigator,
+		AActor* DamageCauser) override;
+
 private:
 	/** 캐릭터와 카메라 사이에 배치할 SpringArm */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -64,14 +70,6 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* Camera;
 
-public:
-	/** Spring Arm 리턴 */
-	FORCEINLINE USpringArmComponent* GetSpringArm() const { return SpringArm; }
-
-	/** Camera 리턴 */
-	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
-
-private:
 	/** 적용 회전율(Yaw) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	float BaseTurnRate;
@@ -113,6 +111,9 @@ private:
 	float MouseAimingLookUpRate;
 
 public:
+	FORCEINLINE USpringArmComponent* GetSpringArm() const { return SpringArm; }
+	FORCEINLINE UCameraComponent* GetCamera() const { return Camera; }
+
 	/** 앞뒤 이동 */
 	void MoveForward(float Value);
 
@@ -131,36 +132,43 @@ public:
 	/** 마우스 Pitch */
 	void LookUp(float Value);
 	
-public:
+private:
 	/** 발사 애니메이션 몽타주 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* HipFireMontage;
 	
 	/** 재장전 애니메이션 몽타주 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* ReloadMontage;
 
 	/** 무기 교체 애니메이션 몽타주 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* EquipMontage;
 
 	/** 총구 이펙트 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* MuzzleFlash;
 
 	/** 총알 충돌 이펙트 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* ImpactParticles;
 
 	/** 총알 연기 트레일 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* BeamParticles;
 
 	/** 헤드샷 사운드 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	USoundCue* CriticalHitSound;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	USoundCue* CriticalAttackSound;
+	
+	/** 피격 사운드 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	USoundCue* MeleeImpactSound;
 
-private:
+	/** 피격 음성 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	USoundCue* MeleeImpactVoice ;
+
 	/** 조준 여부 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	bool bAiming;
@@ -168,7 +176,6 @@ private:
 	/** 조준 버튼(마우스 우측 버튼) 눌림 여부 */
 	bool bAimingButtonPressed;
 
-private:
 	/** 디폴트 Fov */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float CameraDefaultFov;
@@ -188,10 +195,22 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	ECombatState CombatState;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	float MaxHealth;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	float Health;
+
+	FTimerHandle DestroyTimer;
+	float DestroyTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bDead;
+
 public:
-	/** 조준 여부 리턴 */
 	FORCEINLINE bool GetAiming() const { return bAiming; }
 	FORCEINLINE ECombatState GetCombatState() const { return CombatState; }
+	FORCEINLINE USoundCue* GetMeleeImpactSound() { return MeleeImpactSound; }
 
 	/** 조준 */
 	void Aim();
@@ -212,6 +231,10 @@ public:
 
 	/** 적용 감도(BaseTurn, BaseLookUp) 설정 */
 	void SetLookRates();
+
+	void Die();
+	void Destroy();
+
 
 private:
 	/** 십자선 퍼지는 정도 */
@@ -239,8 +262,6 @@ private:
 	bool bFiringBullet;
 	FTimerHandle CrosshairShootTimer;
 
-private:
-	/** 좌클릭 시 */
 	bool bFireButtonPressed;
 
 	/** True - 발사 가능. False - 발사 타이머가 작동 중 */
@@ -301,7 +322,6 @@ public:
 
 	/** 아이템 줍기 */
 	void GetPickupItem(AItemBase* Item);
-
 
 private:
 	/** 현재 장착중인 무기 수정 예정 */
@@ -454,7 +474,7 @@ public:
 
 	FORCEINLINE AWeaponBase* GetEquippedWeapon() const { return EquippedWeapon; }
 
-public:
+	/** 바닥재 */
 	UFUNCTION(BlueprintCallable)
 	EPhysicalSurface GetSurfaceType();
 

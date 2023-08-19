@@ -30,6 +30,7 @@ AEnemy::AEnemy()
 	AgroSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AgroSphere"));
 	AgroSphere->SetupAttachment(GetRootComponent());
 
+	Damage = 15.0f;
 }
 
 // Called when the game starts or when spawned
@@ -37,8 +38,8 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::AgroSphereBeginOverlap);
-	AgroSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::AgroSphereEndOverlap);
+	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::CombatSphereBeginOverlap);
+	AgroSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::CombatSphereEndOverlap);
 
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -60,7 +61,7 @@ void AEnemy::BeginPlay()
 	}
 }
 
-void AEnemy::AgroSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AEnemy::CombatSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	if (OtherActor == nullptr) return;
 
@@ -71,7 +72,7 @@ void AEnemy::AgroSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AA
 	}
 }
 
-void AEnemy::AgroSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AEnemy::CombatSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 	if (OtherActor == nullptr) return;
 
@@ -119,7 +120,7 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 	}
 }
 
-float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (Health - DamageAmount <= 0.0f)
 	{
@@ -149,6 +150,8 @@ void AEnemy::Die()
 {
 	HideHealthBar();
 
+	UGameplayStatics::PlaySound2D(this, DieVoice);
+
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
@@ -167,13 +170,13 @@ void AEnemy::Destroy()
 
 void AEnemy::Fire(AActor* Target)
 {
-	FHitResult HitResult;
 	const USkeletalMeshSocket* BarrelSocket = GetMesh()->GetSocketByName("BarrelSocket");
 	
 	if (BarrelSocket)
 	{
 		FTransform BarrelTransform = BarrelSocket->GetSocketTransform(GetMesh());
-
+		
+		FHitResult HitResult;
 		FVector Start{ BarrelTransform.GetLocation() };
 		FVector End{ Target->GetActorLocation() };
 
@@ -181,9 +184,7 @@ void AEnemy::Fire(AActor* Target)
 			HitResult,
 			Start,
 			End,
-			ECollisionChannel::ECC_Visibility);
-
-		// DrawDebugLine(GetWorld(), Start, End, FColor::Green, true, -1, 0, 10);
+			ECollisionChannel::ECC_Pawn);
 
 		UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticle, BarrelTransform);
 
@@ -191,10 +192,20 @@ void AEnemy::Fire(AActor* Target)
 		{
 			Beam->SetVectorParameter(FName("Target"), End);
 		}
-
+		
 		if (HitResult.bBlockingHit)
 		{
-			// TODO: Damage Player
+			ACharacterBase* Character = Cast<ACharacterBase>(Target);
+
+			if (Character)
+			{
+				UGameplayStatics::ApplyDamage(Character, Damage, EnemyController, this, UDamageType::StaticClass());
+			}
+
+			if (Character->GetMeleeImpactSound())
+			{
+				UGameplayStatics::PlaySoundAtLocation(this, Character->GetMeleeImpactSound(), GetActorLocation());
+			}
 		}
 	}
 }

@@ -94,6 +94,10 @@ ACharacterBase::ACharacterBase()
 	// HandSceneComponent
 	HandSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("HandSceneComponent"));
 
+	MaxHealth = 200.0f;
+	Health = 200.0f;
+	DestroyTime = 8.0f;
+	bDead = false;
 }
 
 // Called when the game starts or when spawned
@@ -221,6 +225,28 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAxis("Turn", this, &ACharacterBase::Turn);
 	PlayerInputComponent->BindAxis("LookUp", this, &ACharacterBase::LookUp);
+}
+
+float ACharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	UGameplayStatics::PlaySound2D(this, MeleeImpactVoice);
+
+	if (Health - DamageAmount <= 0.0f)
+	{
+		Health = 0.0f;
+
+		auto EnemyController = Cast<AEnemyController>(EventInstigator);
+		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName(TEXT("CharacterDead")), true);
+
+		Die();
+	}
+	else
+	{
+		Health -= DamageAmount;
+	}
+
+	return DamageAmount;
+
 }
 
 void ACharacterBase::MoveForward(float Value)
@@ -397,6 +423,31 @@ void ACharacterBase::SetLookRates()
 		BaseTurnRate = HipTurnRate;
 		BaseLookUpRate = HipLookUpRate;
 	}
+}
+
+void ACharacterBase::Die()
+{
+	bDead = true; 
+
+	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
+	GetMesh()->SetSimulatePhysics(true);
+
+	GetWorldTimerManager().SetTimer(
+		DestroyTimer,
+		this,
+		&ACharacterBase::Destroy,
+		DestroyTime);
+
+	APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+	if (PC)
+	{
+		DisableInput(PC);
+	}
+}
+
+void ACharacterBase::Destroy()
+{
+	Super::Destroy();
 }
 
 void ACharacterBase::PlayFireSound()

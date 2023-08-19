@@ -25,7 +25,7 @@ protected:
 	virtual void BeginPlay() override;
 	
 	UFUNCTION()
-	void AgroSphereBeginOverlap(
+	void CombatSphereBeginOverlap(
 		UPrimitiveComponent* OverlappedComponent,
 		AActor* OtherActor,
 		UPrimitiveComponent* OtherComp,
@@ -34,12 +34,12 @@ protected:
 		const FHitResult& SweepResult);
 
 	UFUNCTION()
-		void AgroSphereEndOverlap(
+		void CombatSphereEndOverlap(
 			UPrimitiveComponent* OverlappedComponent, 
 			AActor* OtherActor, 
 			UPrimitiveComponent* OtherComp, 
 			int32 OtherBodyIndex);
-
+	
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
@@ -51,7 +51,11 @@ public:
 	virtual void BulletHit_Implementation(FHitResult HitResult) override;
 
 	/** 데미지를 입었을 때 호출 */
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+	virtual float TakeDamage(
+		float DamageAmount, 
+		struct FDamageEvent const& DamageEvent, 
+		AController* EventInstigator, 
+		AActor* DamageCauser) override;
 
 	UFUNCTION(BlueprintNativeEvent)
 	void ShowHealthBar();
@@ -62,7 +66,7 @@ public:
 
 	/** 사망 */
 	void Die();
-	/** 사망 시 소멸 */
+	/** 사망 시 액터 소멸 */
 	void Destroy();
 
 	UFUNCTION(BlueprintCallable)
@@ -94,6 +98,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	USoundCue* ImpactSound;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	USoundCue* DieVoice;
+
 	/** 피격 몽타주 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* HitMontage;
@@ -105,6 +112,10 @@ private:
 	/** 최대 체력 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float MaxHealth;
+
+	/** 공격력 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	int32 Damage;
 
 	/** 머리 bone 이름 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
