@@ -24,6 +24,7 @@ enum class ECombatState : uint8
 	ECS_FireTimerInProgress		UMETA(DisplayName = "FireTimerInProgress"),
 	ECS_Reloading				UMETA(DisplayName = "Reloading"),
 	ECS_Equipping				UMETA(DisplayNmae = "Equipping"),
+	ECS_ReadyQ					UMETA(DisplayNmae = "ReadyQ"),
 
 	ECS_MAX						UMETA(DisplayName = "DefaultMAX")
 };
@@ -145,6 +146,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* EquipMontage;
 
+	/** Ability Q 몽타주 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* AbilityQMontage;
+
 	/** 총구 이펙트 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* MuzzleFlash;
@@ -207,10 +212,14 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	bool bDead;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bAbility_Q_Ready;
+
 public:
 	FORCEINLINE bool GetAiming() const { return bAiming; }
 	FORCEINLINE ECombatState GetCombatState() const { return CombatState; }
 	FORCEINLINE USoundCue* GetMeleeImpactSound() { return MeleeImpactSound; }
+	FORCEINLINE	bool GetAbilityQReady() const { return bAbility_Q_Ready; }
 
 	/** 조준 */
 	void Aim();
@@ -235,6 +244,13 @@ public:
 	void Die();
 	void Destroy();
 
+	/** Q 버튼을 누르고 있는 동안은 준비 */
+	void Ability_Q_Ready();
+	
+	/** Q 버튼에서 떼면 재생 */
+	void Ability_Q();
+
+	void Ability_R();
 
 private:
 	/** 십자선 퍼지는 정도 */
@@ -448,11 +464,18 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	float CrouchingGroundFriction;
 
+	/** 일정 시간동안 움직이지 못함 */
+	FTimerHandle CanMoveTimer;
+	bool bCanMove;
+
 public:
 	FORCEINLINE bool GetCrouching() const { return bCrouching; }
 
 	/** 좌측Ctrl */
 	void CrouchButtonPressed();
+
+	void SetCanMove(float Time, bool Loop = false, float firstDelay = -1.0f);
+	void CanMove() { bCanMove = true; }
 
 private:
 	/** TArray 인벤토리 */

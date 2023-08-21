@@ -127,7 +127,11 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	EWeaponType EquippedWeaponType;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bAbilityQReady;
+
 	/** 재장전이나 장착중에는 FABRIK 적용하지 않음 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	bool bShouldUseFABRIK;
+	
 };

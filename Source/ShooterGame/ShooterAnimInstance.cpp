@@ -32,6 +32,7 @@ UShooterAnimInstance::UShooterAnimInstance()
 	RecoilWeight = 1.0f;
 	bTurningInPlace = false;
 	
+	bAbilityQReady = false;
 }
 
 void UShooterAnimInstance::NativeInitializeAnimation()
@@ -54,6 +55,8 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		bShouldUseFABRIK = 
 			ShooterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied ||
 			ShooterCharacter->GetCombatState() ==ECombatState::ECS_FireTimerInProgress;
+
+		bAbilityQReady = ShooterCharacter->GetAbilityQReady();
 
 		FVector Velocity = ShooterCharacter->GetVelocity();
 		Velocity.Z = 0;

@@ -11,13 +11,14 @@ ACharacterBase::ACharacterBase()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-
+	
 	// Character의 회전이 Controller의 영향을 받지 않음
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = true;
 
 	// 캐릭터 무브먼트
+	bCanMove = true;
 	bCrouching = false;
 	GetCharacterMovement()->bOrientRotationToMovement = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 340.0f, 0.0f);
@@ -98,6 +99,8 @@ ACharacterBase::ACharacterBase()
 	Health = 200.0f;
 	DestroyTime = 8.0f;
 	bDead = false;
+
+	bAbility_Q_Ready = false;
 }
 
 // Called when the game starts or when spawned
@@ -130,6 +133,8 @@ void ACharacterBase::BeginPlay()
 
 void ACharacterBase::Jump()
 {
+	if (bCanMove == false) return;
+
 	if (bCrouching)
 	{
 		bCrouching = false;
@@ -216,6 +221,9 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("1Key", EInputEvent::IE_Pressed, this, &ACharacterBase::OneKeyPressed);
 	PlayerInputComponent->BindAction("2Key", EInputEvent::IE_Pressed, this, &ACharacterBase::TwoKeyPressed);
 
+	PlayerInputComponent->BindAction("Ability_Q", EInputEvent::IE_Pressed, this, &ACharacterBase::Ability_Q_Ready);
+	PlayerInputComponent->BindAction("Ability_Q", EInputEvent::IE_Released, this, &ACharacterBase::Ability_Q);
+	
 	// Bind Axis
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterBase::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ACharacterBase::MoveRight);
@@ -251,7 +259,7 @@ float ACharacterBase::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 void ACharacterBase::MoveForward(float Value)
 {
-	if ((Controller != nullptr) && (Value != 0.0f))
+	if ((Controller != nullptr) && (Value != 0.0f) && bCanMove)
 	{
 		const FRotator Rotation{ Controller->GetControlRotation() };
 		const FRotator YawRotation{ 0, Rotation.Yaw, 0 };
@@ -263,7 +271,7 @@ void ACharacterBase::MoveForward(float Value)
 
 void ACharacterBase::MoveRight(float Value)
 {
-	if ((Controller != nullptr) && (Value != 0.0f))
+	if ((Controller != nullptr) && (Value != 0.0f) && bCanMove)
 	{
 		const FRotator Rotation{ Controller->GetControlRotation() };
 		const FRotator YawRotation{ 0, Rotation.Yaw, 0 };
@@ -448,6 +456,23 @@ void ACharacterBase::Die()
 void ACharacterBase::Destroy()
 {
 	Super::Destroy();
+}
+
+void ACharacterBase::Ability_Q_Ready()
+{
+	bAbility_Q_Ready = true;
+}
+
+void ACharacterBase::Ability_Q()
+{
+	bAbility_Q_Ready = false;
+	bCanMove = false;
+
+	SetCanMove(1.0f);
+}
+
+void ACharacterBase::Ability_R()
+{
 }
 
 void ACharacterBase::PlayFireSound()
@@ -695,6 +720,11 @@ void ACharacterBase::CrouchButtonPressed()
 		GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
 		GetCharacterMovement()->GroundFriction = BaseGroundFriction;
 	}
+}
+
+void ACharacterBase::SetCanMove(float Time, bool Loop, float firstDelay)
+{
+	GetWorld()->GetTimerManager().SetTimer(CanMoveTimer, this, &ACharacterBase::CanMove, Time);
 }
 
 void ACharacterBase::OneKeyPressed()
