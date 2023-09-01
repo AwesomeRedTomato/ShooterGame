@@ -44,6 +44,9 @@ ACharacterBase::ACharacterBase()
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;	// 카메라 회전을 막아놓는다.
 
+	AbilityQCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("AbilityQCollisionBox"));
+	AbilityQCollisionBox->SetupAttachment(GetRootComponent());
+
 	// 회전율
 	BaseTurnRate = 45.0f;
 	BaseLookUpRate = 45.0f;
@@ -100,7 +103,9 @@ ACharacterBase::ACharacterBase()
 	DestroyTime = 8.0f;
 	bDead = false;
 
-	bAbility_Q_Ready = false;
+	bAbilityQReady = false;
+	AbilityQDamage = 120.0f;
+	bAbilityQAttack = false;
 }
 
 // Called when the game starts or when spawned
@@ -173,6 +178,7 @@ void ACharacterBase::InterpCapsuleHalfHeight(float DeltaTime)
 	GetMesh()->AddLocalOffset(MeshOffset);
 
 	GetCapsuleComponent()->SetCapsuleHalfHeight(InterpHalfHeight);
+
 }
 
 // Called every frame
@@ -283,12 +289,19 @@ void ACharacterBase::MoveRight(float Value)
 
 void ACharacterBase::TurnAtRate(float Rate)
 {
-	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	if (bCanMove)
+	{
+		AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+	}
 }
 
 void ACharacterBase::LookUpAtRate(float Rate)
 {
-	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	if (bCanMove)
+	{
+		AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
+	}
+
 }
 
 void ACharacterBase::Turn(float Value)
@@ -460,19 +473,75 @@ void ACharacterBase::Destroy()
 
 void ACharacterBase::Ability_Q_Ready()
 {
-	bAbility_Q_Ready = true;
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+
+	CombatState = ECombatState::ECS_Skill;
+	bAbilityQReady = true;
 }
 
 void ACharacterBase::Ability_Q()
 {
-	bAbility_Q_Ready = false;
+	CombatState = ECombatState::ECS_Unoccupied;
+	bAbilityQReady = false;
 	bCanMove = false;
+	bAbilityQAttack = true;
 
-	SetCanMove(1.0f);
+	SetCanMove(1.5f);
 }
 
-void ACharacterBase::Ability_R()
+void ACharacterBase::Attack_Q()
 {
+	for (int8 i = 0; i < 3; i++)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			AbilityQAttackParticle,
+			GetActorLocation() + (GetActorForwardVector() * FVector((150.0f + i * 50), 0.0f, -50.0f)));
+	}
+
+	const FVector Start{ GetActorLocation() + (GetActorForwardVector() * 150.0f) };
+	const FVector End{ Start + (GetActorForwardVector() * 250.0f) };
+	const FRotator Orientation{ GetActorRotation() };
+	const FVector HalfSize{ FVector(200.0f, 50.0f, 100.0f) };
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	TEnumAsByte<EObjectTypeQuery> Pawn = UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn);
+	ObjectTypes.Add(Pawn);
+
+	TArray<AActor*> ActorToIgnore;
+	TArray<FHitResult> HitResults;
+
+	UKismetSystemLibrary::BoxTraceMultiForObjects(
+		GetWorld(),
+		Start,
+		End,
+		FVector(200.0f, 50.0f, 100.0f),
+		Orientation,
+		ObjectTypes,
+		false,
+		ActorToIgnore,
+		EDrawDebugTrace::ForDuration,
+		HitResults,
+		true);
+
+	for (auto HitResult : HitResults)
+	{
+		if (HitResult.bBlockingHit)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("bBlock"));
+			AEnemy* Enemy = Cast<AEnemy>(HitResult.GetActor());
+			if (Enemy)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Hit Enemy"));
+				UGameplayStatics::ApplyDamage(
+					Enemy,
+					AbilityQDamage,
+					GetController(),
+					this,
+					UDamageType::StaticClass());
+			}
+		}
+	}
 }
 
 void ACharacterBase::PlayFireSound()
@@ -725,6 +794,7 @@ void ACharacterBase::CrouchButtonPressed()
 void ACharacterBase::SetCanMove(float Time, bool Loop, float firstDelay)
 {
 	GetWorld()->GetTimerManager().SetTimer(CanMoveTimer, this, &ACharacterBase::CanMove, Time);
+
 }
 
 void ACharacterBase::OneKeyPressed()

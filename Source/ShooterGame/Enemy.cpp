@@ -38,11 +38,15 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	AgroSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	AgroSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	
 	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::CombatSphereBeginOverlap);
 	AgroSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::CombatSphereEndOverlap);
 
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 
 	EnemyController = Cast<AEnemyController>(GetController());
@@ -61,8 +65,16 @@ void AEnemy::BeginPlay()
 	}
 }
 
-void AEnemy::CombatSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AEnemy::CombatSphereBeginOverlap(
+	UPrimitiveComponent* OverlappedComponent, 
+	AActor* OtherActor, 
+	UPrimitiveComponent* OtherComp, 
+	int32 OtherBodyIndex, 
+	bool bFromSweep, 
+	const FHitResult& SweepResult)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Agrosphere"));
+
 	if (OtherActor == nullptr) return;
 
 	ACharacterBase* Character = Cast<ACharacterBase>(OtherActor);
@@ -109,8 +121,6 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 			FRotator(0.0f), 
 			true);
 	}
-
-	ShowHealthBar();
 	
 	const float Stunned = FMath::FRandRange(0.0f, 1.0f);
 	if (Stunned <= StunChance)
@@ -122,6 +132,8 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 
 float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	ShowHealthBar();
+
 	if (Health - DamageAmount <= 0.0f)
 	{
 		Health = 0.0f;

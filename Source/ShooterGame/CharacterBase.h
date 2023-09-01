@@ -24,7 +24,7 @@ enum class ECombatState : uint8
 	ECS_FireTimerInProgress		UMETA(DisplayName = "FireTimerInProgress"),
 	ECS_Reloading				UMETA(DisplayName = "Reloading"),
 	ECS_Equipping				UMETA(DisplayNmae = "Equipping"),
-	ECS_ReadyQ					UMETA(DisplayNmae = "ReadyQ"),
+	ECS_Skill					UMETA(DisplayNmae = "Skill"),
 
 	ECS_MAX						UMETA(DisplayName = "DefaultMAX")
 };
@@ -146,10 +146,6 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* EquipMontage;
 
-	/** Ability Q 몽타주 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	UAnimMontage* AbilityQMontage;
-
 	/** 총구 이펙트 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* MuzzleFlash;
@@ -200,27 +196,47 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	ECombatState CombatState;
 
+	/** 최대 체력 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float MaxHealth;
 	
+	/** 현재 체력 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float Health;
 
+	/** 캐릭터 사망 시 소멸까지 텀 */
 	FTimerHandle DestroyTimer;
 	float DestroyTime;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	bool bDead;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	bool bAbility_Q_Ready;
+	/** Ability Q */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* AbilityQCollisionBox;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
+	UAnimMontage* AbilityQMontage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* AbilityQAttackParticle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
+	bool bAbilityQReady;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
+	float AbilityQDamage;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
+	bool bAbilityQAttack;
 
 public:
 	FORCEINLINE bool GetAiming() const { return bAiming; }
 	FORCEINLINE ECombatState GetCombatState() const { return CombatState; }
 	FORCEINLINE USoundCue* GetMeleeImpactSound() { return MeleeImpactSound; }
-	FORCEINLINE	bool GetAbilityQReady() const { return bAbility_Q_Ready; }
+	FORCEINLINE	bool GetAbilityQReady() const { return bAbilityQReady; }
 
+public:
 	/** 조준 */
 	void Aim();
 	void StopAiming();
@@ -248,9 +264,11 @@ public:
 	void Ability_Q_Ready();
 	
 	/** Q 버튼에서 떼면 재생 */
+	UFUNCTION()
 	void Ability_Q();
 
-	void Ability_R();
+	UFUNCTION(BlueprintCallable)
+	void Attack_Q();
 
 private:
 	/** 십자선 퍼지는 정도 */
@@ -464,7 +482,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement", meta = (AllowPrivateAccess = "true"))
 	float CrouchingGroundFriction;
 
-	/** 일정 시간동안 움직이지 못함 */
+	/** 일정 시간동안 무브먼트 정지 */
 	FTimerHandle CanMoveTimer;
 	bool bCanMove;
 
@@ -474,7 +492,7 @@ public:
 	/** 좌측Ctrl */
 	void CrouchButtonPressed();
 
-	void SetCanMove(float Time, bool Loop = false, float firstDelay = -1.0f);
+	void SetCanMove(float Time = 0.0f, bool Loop = false, float firstDelay = -1.0f);
 	void CanMove() { bCanMove = true; }
 
 private:

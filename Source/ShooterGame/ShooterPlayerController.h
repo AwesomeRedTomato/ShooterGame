@@ -23,8 +23,8 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
-		TSubclassOf<UUserWidget> HUDOverlayClass;
+	TSubclassOf<UUserWidget> HUDOverlayClass;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Widgets", meta = (AllowPrivateAccess = "true"))
-		UUserWidget* HUDOverlay;
+	UUserWidget* HUDOverlay;
 };
