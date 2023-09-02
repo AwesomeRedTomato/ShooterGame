@@ -15,6 +15,7 @@
 #include "Ammo.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "ShooterGame.h"
+#include "PlayerCameraShake.h"
 #include "CharacterBase.generated.h"
 
 UENUM(BlueprintType)
@@ -23,8 +24,8 @@ enum class ECombatState : uint8
 	ECS_Unoccupied				UMETA(DisplayName = "Unoccupied"),
 	ECS_FireTimerInProgress		UMETA(DisplayName = "FireTimerInProgress"),
 	ECS_Reloading				UMETA(DisplayName = "Reloading"),
-	ECS_Equipping				UMETA(DisplayNmae = "Equipping"),
-	ECS_Skill					UMETA(DisplayNmae = "Skill"),
+	ECS_Equipping				UMETA(DisplayName = "Equipping"),
+	ECS_AbilityQ				UMETA(DisplayName = "AbilityQ"),
 
 	ECS_MAX						UMETA(DisplayName = "DefaultMAX")
 };
@@ -70,6 +71,13 @@ private:
 	/** 캐릭터 시야 카메라 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* Camera;
+	
+	/** 카메라 셰이크 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UPlayerCameraShake> FireCameraShake;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<UPlayerCameraShake> AbilityQCameraShake;
 
 	/** 적용 회전율(Yaw) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
@@ -193,7 +201,7 @@ private:
 	float ZoomInterpSpeed;
 
 	/** 전투 상태 */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	ECombatState CombatState;
 
 	/** 최대 체력 */
@@ -213,9 +221,6 @@ private:
 
 	/** Ability Q */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
-	UBoxComponent* AbilityQCollisionBox;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* AbilityQMontage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
@@ -230,6 +235,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
 	bool bAbilityQAttack;
 
+	/** Ability Shift */
+
 public:
 	FORCEINLINE bool GetAiming() const { return bAiming; }
 	FORCEINLINE ECombatState GetCombatState() const { return CombatState; }
@@ -242,6 +249,7 @@ public:
 	void StopAiming();
 
 	/** Fire Button이 눌렸을 때 호출 */
+	UFUNCTION(BlueprintCallable)
 	void FireWeapon();
 
 	/** 에임 라인 트레이싱 */

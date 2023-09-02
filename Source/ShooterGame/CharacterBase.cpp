@@ -35,7 +35,7 @@ ACharacterBase::ACharacterBase()
 	// SpringArm 초기화
 	SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	SpringArm->SetupAttachment(GetRootComponent());
-	SpringArm->TargetArmLength = 180.0f;
+	SpringArm->TargetArmLength = 1800.0f;
 	SpringArm->bUsePawnControlRotation = true;
 	SpringArm->SocketOffset = FVector(0.0f, 50.0f, 100.0f);
 
@@ -43,9 +43,6 @@ ACharacterBase::ACharacterBase()
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;	// 카메라 회전을 막아놓는다.
-
-	AbilityQCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("AbilityQCollisionBox"));
-	AbilityQCollisionBox->SetupAttachment(GetRootComponent());
 
 	// 회전율
 	BaseTurnRate = 45.0f;
@@ -351,14 +348,19 @@ void ACharacterBase::FireWeapon()
 {
 	if (EquippedWeapon == nullptr) return;
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
-
+	
 	if (WeaponHasAmmo())
 	{
 		PlayFireSound();
 		SendBullet();
 		PlayHipFireMontage();
 		EquippedWeapon->DecrementAmmo();
-	
+
+		if (FireCameraShake)
+		{
+			GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(FireCameraShake);
+		}
+
 		StartFireTimer();
 
 		// 발사 시 십자선 반동 효과
@@ -475,13 +477,12 @@ void ACharacterBase::Ability_Q_Ready()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 
-	CombatState = ECombatState::ECS_Skill;
+	CombatState = ECombatState::ECS_AbilityQ;
 	bAbilityQReady = true;
 }
 
 void ACharacterBase::Ability_Q()
 {
-	CombatState = ECombatState::ECS_Unoccupied;
 	bAbilityQReady = false;
 	bCanMove = false;
 	bAbilityQAttack = true;
@@ -491,18 +492,26 @@ void ACharacterBase::Ability_Q()
 
 void ACharacterBase::Attack_Q()
 {
-	for (int8 i = 0; i < 3; i++)
+	if (AbilityQAttackParticle)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(),
-			AbilityQAttackParticle,
-			GetActorLocation() + (GetActorForwardVector() * FVector((150.0f + i * 50), 0.0f, -50.0f)));
+		for (int8 i = 0; i < 3; i++)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				AbilityQAttackParticle,
+				GetActorLocation() + (GetActorForwardVector() * FVector((150.0f + i * 50), 0.0f, -50.0f)));
+		}
+	}
+
+	if (AbilityQCameraShake)
+	{
+		GetWorld()->GetFirstPlayerController()->PlayerCameraManager->PlayCameraShake(AbilityQCameraShake);
 	}
 
 	const FVector Start{ GetActorLocation() + (GetActorForwardVector() * 150.0f) };
 	const FVector End{ Start + (GetActorForwardVector() * 250.0f) };
 	const FRotator Orientation{ GetActorRotation() };
-	const FVector HalfSize{ FVector(200.0f, 50.0f, 100.0f) };
+	const FVector HalfSize{ FVector(200.0f, 100.0f, 100.0f) };
 
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	TEnumAsByte<EObjectTypeQuery> Pawn = UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn);
@@ -515,12 +524,12 @@ void ACharacterBase::Attack_Q()
 		GetWorld(),
 		Start,
 		End,
-		FVector(200.0f, 50.0f, 100.0f),
+		HalfSize,
 		Orientation,
 		ObjectTypes,
 		false,
 		ActorToIgnore,
-		EDrawDebugTrace::ForDuration,
+		EDrawDebugTrace::ForOneFrame,
 		HitResults,
 		true);
 
@@ -539,6 +548,8 @@ void ACharacterBase::Attack_Q()
 					GetController(),
 					this,
 					UDamageType::StaticClass());
+
+				Enemy->LaunchCharacter(FVector(-500.0f, 0.0f, 500.0f), true, true);
 			}
 		}
 	}
