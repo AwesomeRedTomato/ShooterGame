@@ -4,6 +4,7 @@
 #include "DrawDebugHelpers.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "BulletHitInterface.h"
+#include "ManaBomb.h"
 #include "Enemy.h"
 
 // Sets default values
@@ -100,9 +101,12 @@ ACharacterBase::ACharacterBase()
 	DestroyTime = 8.0f;
 	bDead = false;
 
-	bAbilityQReady = false;
-	AbilityQDamage = 120.0f;
-	bAbilityQAttack = false;
+	bGroundCollapseReady = false;
+	GroundCallapseDamage = 120.0f;
+	bGroundPunch = false;
+
+	bIsDeploying = false;
+	DeployableRange = 1000.0f;
 }
 
 // Called when the game starts or when spawned
@@ -131,6 +135,7 @@ void ACharacterBase::BeginPlay()
 	
 	// ÃÑ¾Ë ÃÊ±âÈ­
 	InitializeAmmoMap();
+
 }
 
 void ACharacterBase::Jump()
@@ -198,6 +203,8 @@ void ACharacterBase::Tick(float DeltaTime)
 	// Ä¸½¶ ³ôÀÌ º¸°£
 	InterpCapsuleHalfHeight(DeltaTime);
 
+	// µå·Ð ¹èÄ¡
+	Ability_E_Targeting();
 }
 
 // Called to bind functionality to input
@@ -224,9 +231,13 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("1Key", EInputEvent::IE_Pressed, this, &ACharacterBase::OneKeyPressed);
 	PlayerInputComponent->BindAction("2Key", EInputEvent::IE_Pressed, this, &ACharacterBase::TwoKeyPressed);
 
-	PlayerInputComponent->BindAction("Ability_Q", EInputEvent::IE_Pressed, this, &ACharacterBase::Ability_Q_Ready);
-	PlayerInputComponent->BindAction("Ability_Q", EInputEvent::IE_Released, this, &ACharacterBase::Ability_Q);
+	PlayerInputComponent->BindAction("AbilityQ", EInputEvent::IE_Pressed, this, &ACharacterBase::Ability_Q_Ready);
+	PlayerInputComponent->BindAction("AbilityQ", EInputEvent::IE_Released, this, &ACharacterBase::Ability_Q);
+
+	PlayerInputComponent->BindAction("AbilityE", EInputEvent::IE_Pressed, this, &ACharacterBase::Ability_E_Start);
+	PlayerInputComponent->BindAction("AbilityE", EInputEvent::IE_Released, this, &ACharacterBase::Ability_E);
 	
+
 	// Bind Axis
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterBase::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &ACharacterBase::MoveRight);
@@ -478,27 +489,27 @@ void ACharacterBase::Ability_Q_Ready()
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 
 	CombatState = ECombatState::ECS_AbilityQ;
-	bAbilityQReady = true;
+	bGroundCollapseReady = true;
 }
 
 void ACharacterBase::Ability_Q()
 {
-	bAbilityQReady = false;
+	bGroundCollapseReady = false;
 	bCanMove = false;
-	bAbilityQAttack = true;
+	bGroundPunch = true;
 
 	SetCanMove(1.5f);
 }
 
 void ACharacterBase::Attack_Q()
 {
-	if (AbilityQAttackParticle)
+	if (GroundCollapseParticle)
 	{
-		for (int8 i = 0; i < 3; i++)
+		for (int8 i = 0; i < 5; i++)
 		{
 			UGameplayStatics::SpawnEmitterAtLocation(
 				GetWorld(),
-				AbilityQAttackParticle,
+				GroundCollapseParticle,
 				GetActorLocation() + (GetActorForwardVector() * FVector((150.0f + i * 50), 0.0f, -50.0f)));
 		}
 	}
@@ -509,9 +520,9 @@ void ACharacterBase::Attack_Q()
 	}
 
 	const FVector Start{ GetActorLocation() + (GetActorForwardVector() * 150.0f) };
-	const FVector End{ Start + (GetActorForwardVector() * 250.0f) };
+	const FVector End{ Start + (GetActorForwardVector() * 750.0f) };
 	const FRotator Orientation{ GetActorRotation() };
-	const FVector HalfSize{ FVector(200.0f, 100.0f, 100.0f) };
+	const FVector HalfSize{ FVector(300.0f, 100.0f, 100.0f) };
 
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	TEnumAsByte<EObjectTypeQuery> Pawn = UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn);
@@ -537,14 +548,12 @@ void ACharacterBase::Attack_Q()
 	{
 		if (HitResult.bBlockingHit)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("bBlock"));
 			AEnemy* Enemy = Cast<AEnemy>(HitResult.GetActor());
 			if (Enemy)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Hit Enemy"));
 				UGameplayStatics::ApplyDamage(
 					Enemy,
-					AbilityQDamage,
+					GroundCallapseDamage,
 					GetController(),
 					this,
 					UDamageType::StaticClass());
@@ -553,6 +562,48 @@ void ACharacterBase::Attack_Q()
 			}
 		}
 	}
+}
+
+void ACharacterBase::Ability_E_Start()
+{
+	if (CombatState != ECombatState::ECS_Unoccupied) return;
+	if (bIsDeploying)	return;
+
+	CombatState = ECombatState::ECS_AbilityShift;
+	bIsDeploying = true;
+
+	
+	FHitResult HitResult;
+	bool BeamEnd = GetBeamEndLocation(GetActorLocation(), HitResult);
+
+	if (BeamEnd)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Spawn DRone"));
+		Drone = GetWorld()->SpawnActor<ADrone>(ToSpawnDrone, HitResult.Location, GetActorRotation());
+	}
+}
+
+void ACharacterBase::Ability_E_Targeting()
+{
+	if (Drone && bIsDeploying)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Deploying"));
+
+		FHitResult HitResult;
+		bool BeamEnd = GetBeamEndLocation(GetActorLocation(), HitResult);
+
+		if (BeamEnd)
+		{
+			Drone->SetActorLocation(HitResult.Location + FVector(0.0f, 0.0f, 100.0f));
+			Drone->SetActorRotation(GetActorRotation());
+		}
+	}
+}
+
+void ACharacterBase::Ability_E()
+{
+	bIsDeploying = false;
+	CombatState = ECombatState::ECS_Unoccupied;
 }
 
 void ACharacterBase::PlayFireSound()

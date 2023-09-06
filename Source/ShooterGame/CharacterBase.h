@@ -16,6 +16,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "ShooterGame.h"
 #include "PlayerCameraShake.h"
+#include "Drone.h"
 #include "CharacterBase.generated.h"
 
 UENUM(BlueprintType)
@@ -26,6 +27,7 @@ enum class ECombatState : uint8
 	ECS_Reloading				UMETA(DisplayName = "Reloading"),
 	ECS_Equipping				UMETA(DisplayName = "Equipping"),
 	ECS_AbilityQ				UMETA(DisplayName = "AbilityQ"),
+	ECS_AbilityShift			UMETA(DisplayName = "AbilityShift"),
 
 	ECS_MAX						UMETA(DisplayName = "DefaultMAX")
 };
@@ -219,29 +221,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	bool bDead;
 
-	/** Ability Q */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
-	UAnimMontage* AbilityQMontage;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
-	UParticleSystem* AbilityQAttackParticle;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
-	bool bAbilityQReady;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
-	float AbilityQDamage;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability Q", meta = (AllowPrivateAccess = "true"))
-	bool bAbilityQAttack;
-
-	/** Ability Shift */
-
 public:
 	FORCEINLINE bool GetAiming() const { return bAiming; }
 	FORCEINLINE ECombatState GetCombatState() const { return CombatState; }
 	FORCEINLINE USoundCue* GetMeleeImpactSound() { return MeleeImpactSound; }
-	FORCEINLINE	bool GetAbilityQReady() const { return bAbilityQReady; }
 
 public:
 	/** 조준 */
@@ -268,6 +251,23 @@ public:
 	void Die();
 	void Destroy();
 
+private:
+	/** Ability Q(Punch Ground) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* GroundCollapseParticle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))
+	bool bGroundCollapseReady;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))
+	float GroundCallapseDamage;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))
+	bool bGroundPunch;
+
+public:
+	FORCEINLINE	bool GetAbilityQReady() const { return bGroundCollapseReady; }
+	
 	/** Q 버튼을 누르고 있는 동안은 준비 */
 	void Ability_Q_Ready();
 	
@@ -277,6 +277,30 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Attack_Q();
+
+private:
+	/** Ability Shift(Suppress) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
+	bool bIsDeploying;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
+	float DeployableRange;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
+	TSubclassOf<ADrone> ToSpawnDrone;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
+	ADrone* Drone;
+
+public:
+	FORCEINLINE	bool GetStartDeploy() const { return bIsDeploying; }
+	
+	void Ability_E_Start();
+	
+	UFUNCTION()
+	void Ability_E_Targeting();
+	
+	void Ability_E();
 
 private:
 	/** 십자선 퍼지는 정도 */

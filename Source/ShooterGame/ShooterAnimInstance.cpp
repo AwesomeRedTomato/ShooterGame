@@ -33,6 +33,7 @@ UShooterAnimInstance::UShooterAnimInstance()
 	bTurningInPlace = false;
 	
 	bAbilityQReady = false;
+	bIsDroneDeploying = false;
 }
 
 void UShooterAnimInstance::NativeInitializeAnimation()
@@ -57,6 +58,7 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 			ShooterCharacter->GetCombatState() ==ECombatState::ECS_FireTimerInProgress;
 
 		bAbilityQReady = ShooterCharacter->GetAbilityQReady();
+		bIsDroneDeploying = ShooterCharacter->GetStartDeploy();
 
 		FVector Velocity = ShooterCharacter->GetVelocity();
 		Velocity.Z = 0;

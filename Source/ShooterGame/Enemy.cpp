@@ -73,8 +73,6 @@ void AEnemy::CombatSphereBeginOverlap(
 	bool bFromSweep, 
 	const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Agrosphere"));
-
 	if (OtherActor == nullptr) return;
 
 	ACharacterBase* Character = Cast<ACharacterBase>(OtherActor);
