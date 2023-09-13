@@ -31,6 +31,8 @@ AEnemy::AEnemy()
 	AgroSphere->SetupAttachment(GetRootComponent());
 
 	Damage = 15.0f;
+
+	bIsDie = false;
 }
 
 // Called when the game starts or when spawned
@@ -131,16 +133,20 @@ void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	ShowHealthBar();
-
+	
 	if (Health - DamageAmount <= 0.0f)
 	{
 		Health = 0.0f;
+		
+		if (bIsDie) return 0;
+		
 		Die();
 	}
 	else
 	{
 		Health -= DamageAmount;
 	}
+
 
 	return DamageAmount;
 }
@@ -158,13 +164,15 @@ void AEnemy::ShowHealthBar_Implementation()
 
 void AEnemy::Die()
 {
-	HideHealthBar();
+	bIsDie = true;
 
-	UGameplayStatics::PlaySound2D(this, DieVoice);
+	HideHealthBar();
 
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
 	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+
+	UGameplayStatics::PlaySound2D(this, DieVoice);
 
 	GetWorldTimerManager().SetTimer(
 		DestroyTimer,
@@ -176,6 +184,7 @@ void AEnemy::Die()
 void AEnemy::Destroy()
 {
 	AActor::Destroy();
+
 }
 
 void AEnemy::Fire(AActor* Target)

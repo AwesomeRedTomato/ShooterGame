@@ -280,7 +280,7 @@ public:
 
 private:
 	/** Ability Shift(Suppress) */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
 	bool bIsDeploying;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Components/SphereComponent.h"
 #include "Drone.generated.h"
 
 UCLASS()
@@ -27,6 +28,39 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Drone", meta = (AllowPrivateAccess = "true"))
 	USkeletalMeshComponent* DroneMesh;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Drone", meta = (AllowPrivateAccess = "true"))
+	float Damage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Drone", meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* BeamParticle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Drone", meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* DestroyParticle;
+
+	/** 공격 범위(Combat Sphere Radius) */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Drone", meta = (AllowPrivateAccess = "true"))
+	float AttackRange;
+
+	/** 공격 타겟 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Drone", meta = (AllowPrivateAccess = "true"))
+	class AEnemy* Enemy;
+	
+	/** 드론 지속 시간 */
+	FTimerHandle DroneTimer;
+	float DroneTime;
+
+	/** 공격 빈도 */
+	FTimerHandle BeamTimer;
+	float BeamFrequencyTime;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Drone", meta = (AllowPrivateAccess = "true"))
+	bool bIsDeployed;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetDroneMesh() const { return DroneMesh; }
+	
+	FORCEINLINE void SetIsDeployed(bool IsDeployed) { bIsDeployed = IsDeployed; }
+
+	void BeamAttack();
+	void Destroy();
 };

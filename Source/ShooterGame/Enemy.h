@@ -171,6 +171,8 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
 	FVector PatrolPoint2;
 
+	bool bIsDie;
+
 public:
 	// Get
 	FORCEINLINE FString GetHeadBone() const { return HeadBone; }

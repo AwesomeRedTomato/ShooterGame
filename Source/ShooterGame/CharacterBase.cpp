@@ -568,7 +568,7 @@ void ACharacterBase::Ability_E_Start()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 	if (bIsDeploying)	return;
-
+	
 	CombatState = ECombatState::ECS_AbilityShift;
 	bIsDeploying = true;
 
@@ -576,9 +576,8 @@ void ACharacterBase::Ability_E_Start()
 	FHitResult HitResult;
 	bool BeamEnd = GetBeamEndLocation(GetActorLocation(), HitResult);
 
-	if (BeamEnd)
+	if (BeamEnd && (Drone == nullptr))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Spawn DRone"));
 		Drone = GetWorld()->SpawnActor<ADrone>(ToSpawnDrone, HitResult.Location, GetActorRotation());
 	}
 }
@@ -587,15 +586,13 @@ void ACharacterBase::Ability_E_Targeting()
 {
 	if (Drone && bIsDeploying)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Deploying"));
-
 		FHitResult HitResult;
 		bool BeamEnd = GetBeamEndLocation(GetActorLocation(), HitResult);
 
 		if (BeamEnd)
 		{
 			Drone->SetActorLocation(HitResult.Location + FVector(0.0f, 0.0f, 100.0f));
-			Drone->SetActorRotation(GetActorRotation());
+			Drone->SetActorRotation(GetActorRightVector().Rotation());
 		}
 	}
 }
@@ -603,6 +600,15 @@ void ACharacterBase::Ability_E_Targeting()
 void ACharacterBase::Ability_E()
 {
 	bIsDeploying = false;
+	if (Drone)
+	{
+		Drone->SetIsDeployed(true);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Drone"));
+	}
+
 	CombatState = ECombatState::ECS_Unoccupied;
 }
 
@@ -683,9 +689,12 @@ void ACharacterBase::SendBullet()
 					BeamHitResult.Location);
 			}
 
-
+			// ∆Æ∑π¿œ
 			UParticleSystemComponent* Beam =
-				UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), BeamParticles, SocketTransform);
+				UGameplayStatics::SpawnEmitterAtLocation(
+					GetWorld(), 
+					BeamParticles, 
+					SocketTransform);
 
 			if (Beam)
 			{
