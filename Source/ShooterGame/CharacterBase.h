@@ -295,6 +295,8 @@ private:
 public:
 	FORCEINLINE	bool GetStartDeploy() const { return bIsDeploying; }
 	
+	FORCEINLINE	void SetDrone(ADrone* drone) { Drone = drone; }
+
 	void Ability_E_Start();
 	
 	UFUNCTION()

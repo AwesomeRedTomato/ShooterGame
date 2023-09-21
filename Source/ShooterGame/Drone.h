@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/SphereComponent.h"
+#include "Enemy.h"
 #include "Drone.generated.h"
 
 UCLASS()
@@ -35,6 +36,9 @@ private:
 	UParticleSystem* BeamParticle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Drone", meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* SpawnParticle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Drone", meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* DestroyParticle;
 
 	/** 공격 범위(Combat Sphere Radius) */
@@ -43,7 +47,7 @@ private:
 
 	/** 공격 타겟 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Drone", meta = (AllowPrivateAccess = "true"))
-	class AEnemy* Enemy;
+	AEnemy* Target;
 	
 	/** 드론 지속 시간 */
 	FTimerHandle DroneTimer;
@@ -56,11 +60,15 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Drone", meta = (AllowPrivateAccess = "true"))
 	bool bIsDeployed;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Drone", meta = (AllowPrivateAccess = "true"))
+	bool bIsAttacking;
+
 public:
 	FORCEINLINE USkeletalMeshComponent* GetDroneMesh() const { return DroneMesh; }
-	
-	FORCEINLINE void SetIsDeployed(bool IsDeployed) { bIsDeployed = IsDeployed; }
+
+	void SetDroneTime();
 
 	void BeamAttack();
+
 	void Destroy();
 };

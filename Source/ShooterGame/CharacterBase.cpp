@@ -591,25 +591,22 @@ void ACharacterBase::Ability_E_Targeting()
 
 		if (BeamEnd)
 		{
+			FRotator Rotation{ GetActorForwardVector().RotateAngleAxis(-90.0f, GetActorForwardVector().ZAxisVector).Rotation() };
+			Drone->SetActorRotation(Rotation);
 			Drone->SetActorLocation(HitResult.Location + FVector(0.0f, 0.0f, 100.0f));
-			Drone->SetActorRotation(GetActorRightVector().Rotation());
 		}
 	}
 }
 
 void ACharacterBase::Ability_E()
 {
+	CombatState = ECombatState::ECS_Unoccupied;
+	
 	bIsDeploying = false;
 	if (Drone)
 	{
-		Drone->SetIsDeployed(true);
+		Drone->SetDroneTime();
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No Drone"));
-	}
-
-	CombatState = ECombatState::ECS_Unoccupied;
 }
 
 void ACharacterBase::PlayFireSound()

@@ -2,11 +2,11 @@
 
 
 #include "Drone.h"
-#include "Enemy.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "CharacterBase.h"
 
 // Sets default values
 ADrone::ADrone()
@@ -20,6 +20,7 @@ ADrone::ADrone()
 	Damage = 5.0f;
 	AttackRange = 800.0f;
 	bIsDeployed = false;
+	bIsAttacking = false;
 
 	DroneTime = 7.0f;
 	BeamFrequencyTime = 0.5f;
@@ -29,13 +30,6 @@ ADrone::ADrone()
 void ADrone::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	GetWorldTimerManager().SetTimer(
-		DroneTimer,
-		this,
-		&ADrone::Destroy,
-		DroneTime);
-
 }
 
 // Called every frame
@@ -43,78 +37,92 @@ void ADrone::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// 단일 구 트레이싱: 범위 내 Enemy 존재 시 일정 간격으로 공격
-	const FVector Center{ GetActorLocation() };
-	const FRotator Orientation{ GetActorRotation() };
-	float Radius = AttackRange;
-
-	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
-	TEnumAsByte<EObjectTypeQuery> Pawn = UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn);
-	ObjectTypes.Add(Pawn);
-
-	// 플레이어는 공격 대상에서 제외
-	TArray<AActor*> ActorToIgnore;
-	ActorToIgnore.Add(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
-
-	FHitResult HitResult;
-
-	UKismetSystemLibrary::SphereTraceSingleForObjects(
-		GetWorld(),
-		Center,
-		Center,
-		Radius,
-		ObjectTypes,
-		false,
-		ActorToIgnore,
-		EDrawDebugTrace::ForOneFrame,
-		HitResult,
-		true);
-
-	if (HitResult.bBlockingHit)
+	if (bIsDeployed)
 	{
-		Enemy = Cast<AEnemy>(HitResult.GetActor());
-		if (Enemy)
+		// 단일 구 트레이싱: 범위 내 Enemy 존재 시 일정 간격으로 공격
+		const FVector Center{ GetActorLocation() };
+		const FRotator Orientation{ GetActorRotation() };
+		float Radius = AttackRange;
+
+		TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+		TEnumAsByte<EObjectTypeQuery> Pawn = UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn);
+		ObjectTypes.Add(Pawn);
+
+		// 플레이어는 공격 대상에서 제외
+		TArray<AActor*> ActorToIgnore;
+		ActorToIgnore.Add(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+
+		FHitResult HitResult;
+
+		UKismetSystemLibrary::SphereTraceSingleForObjects(
+			GetWorld(),
+			Center,
+			Center,
+			Radius,
+			ObjectTypes,
+			false,
+			ActorToIgnore,
+			EDrawDebugTrace::ForOneFrame,
+			HitResult,
+			true);
+
+		if (HitResult.bBlockingHit)
 		{
-			// 공격
-			GetWorldTimerManager().SetTimer(
-				BeamTimer,
-				this,
-				&ADrone::BeamAttack,
-				BeamFrequencyTime,
-				true,
-				0.8f);
+			Target = Cast<AEnemy>(HitResult.Actor);
 		}
 	}
 }
 
+void ADrone::SetDroneTime()
+{
+	bIsDeployed = true;
+
+	GetWorldTimerManager().SetTimer(
+		DroneTimer,
+		this,
+		&ADrone::Destroy,
+		DroneTime);
+
+	GetWorldTimerManager().SetTimer(
+		BeamTimer,
+		this,
+		&ADrone::BeamAttack,
+		BeamFrequencyTime,
+		true);
+
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SpawnParticle, GetActorLocation());
+}
+
 void ADrone::BeamAttack()
 {
-	// 데미지
-	UGameplayStatics::ApplyDamage(
-		Enemy,
-		Damage,
-		Enemy->GetController(),
-		this,
-		UDamageType::StaticClass());
-
-	// Beam 파티클
-	const USkeletalMeshSocket* SocketMesh = GetDroneMesh()->GetSocketByName(FName(TEXT("eye_rays")));
-	FTransform BeamTransform = SocketMesh->GetSocketTransform(GetDroneMesh());
-
-	UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
-		GetWorld(),
-		BeamParticle,
-		BeamTransform);
-
-	if (Beam)
+	if (Target)
 	{
-		Beam->SetVectorParameter(FName("Target"), BeamTransform.GetLocation());
+		bIsAttacking = true;
+
+		const USkeletalMeshSocket* Socket = GetDroneMesh()->GetSocketByName("eye_rays");
+		FTransform SocketTransform = Socket->GetSocketTransform(GetDroneMesh());
+
+		UParticleSystemComponent* Beam = UGameplayStatics::SpawnEmitterAtLocation(
+			GetWorld(),
+			BeamParticle,
+			SocketTransform);
+
+		Beam->SetBeamEndPoint(0, Target->GetActorLocation());
+
+		// 데미지
+		UGameplayStatics::ApplyDamage(
+			Target,
+			Damage,
+			nullptr,
+			this,
+			UDamageType::StaticClass());
+
 	}
 }
 
 void ADrone::Destroy()
 {
-	SetIsDeployed(false);
+	bIsAttacking = false;
 
 	UGameplayStatics::SpawnEmitterAtLocation(
 		GetWorld(),
@@ -122,4 +130,10 @@ void ADrone::Destroy()
 		GetActorLocation());
 
 	Super::Destroy();
+
+	ACharacterBase* Character = Cast<ACharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	if (Character)
+	{
+		Character->SetDrone(nullptr);
+	}
 }
