@@ -5,14 +5,14 @@
 
 void USevarogAnimInstance::NativeUpdateAnimation(float DeltaTime)
 {
-	if (BossEnemy == nullptr)
+	if (Boss == nullptr)
 	{
-		BossEnemy = Cast<ABossEnemy>(TryGetPawnOwner());
+		Boss = Cast<ABoss>(TryGetPawnOwner());
 	}
 
-	if (BossEnemy)
+	if (Boss)
 	{
-		FVector Velocity{ BossEnemy->GetVelocity() };
+		FVector Velocity{ Boss->GetVelocity() };
 		Velocity.Z = 0.0f;
 		Speed = Velocity.Size();
 	}

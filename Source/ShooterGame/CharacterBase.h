@@ -250,7 +250,7 @@ public:
 
 	void Die();
 	void Destroy();
-
+	
 private:
 	/** Ability Q(Punch Ground) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))

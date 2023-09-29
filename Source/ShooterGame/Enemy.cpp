@@ -27,12 +27,12 @@ AEnemy::AEnemy()
 
 	StunChance = 0.5f;
 
-	AgroSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AgroSphere"));
-	AgroSphere->SetupAttachment(GetRootComponent());
+	CombatSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AgroSphere"));
+	CombatSphere->SetupAttachment(GetRootComponent());
 
 	Damage = 15.0f;
 
-	bIsDie = false;
+	bIsDead = false;
 }
 
 // Called when the game starts or when spawned
@@ -40,11 +40,11 @@ void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	AgroSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
-	AgroSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+	CombatSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	CombatSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
 	
-	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::CombatSphereBeginOverlap);
-	AgroSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::CombatSphereEndOverlap);
+	CombatSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemy::CombatSphereBeginOverlap);
+	CombatSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemy::CombatSphereEndOverlap);
 
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
@@ -138,7 +138,7 @@ float AEnemy::TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEv
 	{
 		Health = 0.0f;
 		
-		if (bIsDie) return 0;
+		if (bIsDead) return 0;
 		
 		Die();
 	}
@@ -164,7 +164,7 @@ void AEnemy::ShowHealthBar_Implementation()
 
 void AEnemy::Die()
 {
-	bIsDie = true;
+	bIsDead = true;
 
 	HideHealthBar();
 
@@ -184,7 +184,6 @@ void AEnemy::Die()
 void AEnemy::Destroy()
 {
 	AActor::Destroy();
-
 }
 
 void AEnemy::Fire(AActor* Target)

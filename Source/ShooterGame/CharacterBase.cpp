@@ -12,7 +12,7 @@ ACharacterBase::ACharacterBase()
 {
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
-	
+
 	// Character의 회전이 Controller의 영향을 받지 않음
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
@@ -25,7 +25,7 @@ ACharacterBase::ACharacterBase()
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 340.0f, 0.0f);
 	GetCharacterMovement()->JumpZVelocity = 600.0f;
 	GetCharacterMovement()->AirControl = 600.0f;
-	
+
 	BaseMovementSpeed = 650.0f;
 	CrouchMovementSpeed = 300.0f;
 	StandingCapsuleHalfHeight = 88.0f;
@@ -132,7 +132,7 @@ void ACharacterBase::BeginPlay()
 	EquippedWeapon->SetSlotIndex(0);
 	EquippedWeapon->DisableCustomDepth();
 	EquippedWeapon->DisableGlowMaterial();
-	
+
 	// 총알 초기화
 	InitializeAmmoMap();
 
@@ -167,11 +167,11 @@ void ACharacterBase::InterpCapsuleHalfHeight(float DeltaTime)
 	}
 
 	const float InterpHalfHeight = FMath::FInterpTo(
-		GetCapsuleComponent()->GetScaledCapsuleHalfHeight(), 
+		GetCapsuleComponent()->GetScaledCapsuleHalfHeight(),
 		TargetCapsuleHalfHeight,
 		DeltaTime,
 		20.0f);
-	
+
 	// 앉았을 때 음수, 서있을 때 양수 값을 가짐
 	const float DeltaCapsuleHalfHeight{ InterpHalfHeight - GetCapsuleComponent()->GetScaledCapsuleHalfHeight() };
 	const FVector MeshOffset{ 0.0f, 0.0f, -DeltaCapsuleHalfHeight };
@@ -225,7 +225,7 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("Select", EInputEvent::IE_Released, this, &ACharacterBase::SelectButtonReleased);
 
 	PlayerInputComponent->BindAction("ReloadButton", EInputEvent::IE_Released, this, &ACharacterBase::ReloadButtonPressed);
-	
+
 	PlayerInputComponent->BindAction("Crouch", EInputEvent::IE_Pressed, this, &ACharacterBase::CrouchButtonPressed);
 
 	PlayerInputComponent->BindAction("1Key", EInputEvent::IE_Pressed, this, &ACharacterBase::OneKeyPressed);
@@ -236,7 +236,7 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 
 	PlayerInputComponent->BindAction("AbilityE", EInputEvent::IE_Pressed, this, &ACharacterBase::Ability_E_Start);
 	PlayerInputComponent->BindAction("AbilityE", EInputEvent::IE_Released, this, &ACharacterBase::Ability_E);
-	
+
 
 	// Bind Axis
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterBase::MoveForward);
@@ -359,7 +359,7 @@ void ACharacterBase::FireWeapon()
 {
 	if (EquippedWeapon == nullptr) return;
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
-	
+
 	if (WeaponHasAmmo())
 	{
 		PlayFireSound();
@@ -459,9 +459,10 @@ void ACharacterBase::SetLookRates()
 	}
 }
 
+
 void ACharacterBase::Die()
 {
-	bDead = true; 
+	bDead = true;
 
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);
@@ -568,11 +569,11 @@ void ACharacterBase::Ability_E_Start()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
 	if (bIsDeploying)	return;
-	
+
 	CombatState = ECombatState::ECS_AbilityShift;
 	bIsDeploying = true;
 
-	
+
 	FHitResult HitResult;
 	bool BeamEnd = GetBeamEndLocation(GetActorLocation(), HitResult);
 
@@ -601,7 +602,7 @@ void ACharacterBase::Ability_E_Targeting()
 void ACharacterBase::Ability_E()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
-	
+
 	bIsDeploying = false;
 	if (Drone)
 	{
@@ -638,6 +639,7 @@ void ACharacterBase::SendBullet()
 
 		if (bBeamEnd)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("Beam End"));
 			// 총알 충돌 지점 Particle
 			if (BeamHitResult.Actor.IsValid())
 			{
@@ -648,9 +650,11 @@ void ACharacterBase::SendBullet()
 					BulletHitInterface->BulletHit_Implementation(BeamHitResult);
 				}
 
-				AEnemy* HitEnemy = Cast<AEnemy>(BeamHitResult.Actor);
+				auto HitEnemy = Cast<AEnemy>(BeamHitResult.Actor);
+				
 				if (HitEnemy)
 				{
+					UE_LOG(LogTemp, Warning, TEXT("Hit Enemy"));
 					int32 Damage{};
 
 					// 헤드샷
@@ -680,6 +684,7 @@ void ACharacterBase::SendBullet()
 			}
 			else
 			{
+				UE_LOG(LogTemp, Warning, TEXT("No Hit Enemy"));
 				UGameplayStatics::SpawnEmitterAtLocation(
 					GetWorld(),
 					ImpactParticles,
@@ -689,8 +694,8 @@ void ACharacterBase::SendBullet()
 			// 트레일
 			UParticleSystemComponent* Beam =
 				UGameplayStatics::SpawnEmitterAtLocation(
-					GetWorld(), 
-					BeamParticles, 
+					GetWorld(),
+					BeamParticles,
 					SocketTransform);
 
 			if (Beam)
@@ -720,7 +725,7 @@ void ACharacterBase::ReloadButtonPressed()
 void ACharacterBase::ReloadWeapon()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
-	
+
 	if (EquippedWeapon == nullptr) return;
 
 	if (CarryingAmmo() && !EquippedWeapon->ClipIsFull())
@@ -868,8 +873,8 @@ void ACharacterBase::SetCanMove(float Time, bool Loop, float firstDelay)
 void ACharacterBase::OneKeyPressed()
 {
 	if (EquippedWeapon->GetSlotIndex() == 0) return;
-	
-	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 0);	
+
+	ExchangeInventoryItems(EquippedWeapon->GetSlotIndex(), 0);
 }
 
 void ACharacterBase::TwoKeyPressed()
@@ -896,7 +901,7 @@ void ACharacterBase::ExchangeInventoryItems(int32 CurrentItemIndex, int32 NewIte
 	NewWeapon->SetItemState(EItemState::EIS_Equipped);
 
 	CombatState = ECombatState::ECS_Equipping;
-	
+
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 	if (AnimInstance && EquipMontage)
 	{
@@ -1009,9 +1014,9 @@ void ACharacterBase::StartFireTimer()
 	CombatState = ECombatState::ECS_FireTimerInProgress;
 
 	GetWorldTimerManager().SetTimer(
-		AutoFireTimer, 
-		this, 
-		&ACharacterBase::AutoFireReset, 
+		AutoFireTimer,
+		this,
+		&ACharacterBase::AutoFireReset,
 		EquippedWeapon->GetAutoFireRate());
 
 }
@@ -1094,13 +1099,13 @@ void ACharacterBase::TraceForItems()
 	{
 		FHitResult ItemTraceResult;
 		FVector HitLocation;
-		
+
 		TraceUnderCrosshairs(ItemTraceResult, HitLocation);
 
 		if (ItemTraceResult.bBlockingHit)
 		{
 			TraceHitItem = Cast<AItemBase>(ItemTraceResult.Actor);
-			
+
 			if (TraceHitItem && TraceHitItem->GetItemState() == EItemState::EIS_EquipInterping)
 			{
 				TraceHitItem = nullptr;
@@ -1135,7 +1140,7 @@ void ACharacterBase::TraceForItems()
 void ACharacterBase::GetPickupItem(AItemBase* Item)
 {
 	Item->PlayPickupSound();
-	
+
 	Item->DisableCustomDepth();
 	Item->DisableGlowMaterial();
 
@@ -1193,7 +1198,7 @@ void ACharacterBase::EquipWeapon(AWeaponBase* WeaponToEquip, bool bSwapping)
 		{
 			EquipItemDelegate.Broadcast(-1, WeaponToEquip->GetSlotIndex());
 		}
-		else if(!bSwapping)
+		else if (!bSwapping)
 		{
 			EquipItemDelegate.Broadcast(EquippedWeapon->GetSlotIndex(), WeaponToEquip->GetSlotIndex());
 		}

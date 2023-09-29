@@ -34,11 +34,11 @@ protected:
 		const FHitResult& SweepResult);
 
 	UFUNCTION()
-		void CombatSphereEndOverlap(
-			UPrimitiveComponent* OverlappedComponent, 
-			AActor* OtherActor, 
-			UPrimitiveComponent* OtherComp, 
-			int32 OtherBodyIndex);
+	void CombatSphereEndOverlap(
+		UPrimitiveComponent* OverlappedComponent,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex);
 	
 public:	
 	// Called every frame
@@ -47,7 +47,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	/** 총알 충돌 파티클 */
+	/** 피격 인터페이스 */
 	virtual void BulletHit_Implementation(FHitResult HitResult) override;
 
 	/** 데미지를 입었을 때 호출 */
@@ -84,7 +84,7 @@ public:
 private:
 	/** 적 인식 충돌체 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	USphereComponent* AgroSphere;
+	USphereComponent* CombatSphere;
 
 	/** 피격 파티클 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
@@ -171,7 +171,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true", MakeEditWidget = "true"))
 	FVector PatrolPoint2;
 
-	bool bIsDie;
+	bool bIsDead;
 
 public:
 	// Get
