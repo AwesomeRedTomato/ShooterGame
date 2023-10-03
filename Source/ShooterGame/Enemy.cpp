@@ -27,7 +27,7 @@ AEnemy::AEnemy()
 
 	StunChance = 0.5f;
 
-	CombatSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AgroSphere"));
+	CombatSphere = CreateDefaultSubobject<USphereComponent>(TEXT("CombatSphere"));
 	CombatSphere->SetupAttachment(GetRootComponent());
 
 	Damage = 15.0f;
@@ -172,7 +172,10 @@ void AEnemy::Die()
 	GetMesh()->SetSimulatePhysics(true);
 	GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 
-	UGameplayStatics::PlaySound2D(this, DieVoice);
+	if (DyingVoice)
+	{
+		UGameplayStatics::PlaySound2D(this, DyingVoice);
+	}
 
 	GetWorldTimerManager().SetTimer(
 		DestroyTimer,
