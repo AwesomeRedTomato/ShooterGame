@@ -9,8 +9,12 @@ ABoss::ABoss()
 	AgroSphere->SetupAttachment(GetRootComponent());
 
 	MaxHealth = 2000.0f;
-	Health = MaxHealth;
+	Health = 2000.0;
 	
+	bIsOverlapCombatSphere = false;
+	bIsOverlapAgroSphere = false;
+
+	SwingDamage = 20.0f;
 }
 
 void ABoss::BeginPlay()
@@ -36,7 +40,7 @@ void ABoss::AgroSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 
 	if (Target == nullptr)
 	{
-		bIsOverlapCombatSphere = true;
+		bIsOverlapAgroSphere = true;
 		Target = Cast<ACharacterBase>(OtherActor);
 		EnemyController->GetBlackboardComponent()->SetValueAsObject("Target", Target);
 	}
@@ -46,7 +50,7 @@ void ABoss::AgroSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 {
 	if (Target)
 	{
-		bIsOverlapCombatSphere = false;
+		bIsOverlapAgroSphere = false;
 		Target = nullptr;
 		EnemyController->GetBlackboardComponent()->SetValueAsObject("Target", Target);
 	}
@@ -104,4 +108,13 @@ void ABoss::Swing2()
 
 void ABoss::SoulSteal()
 {
+	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
+	SetBossCombatState(EBossCombatState::EBCS_SoulSteal);
+}
+
+void ABoss::SpeedBurst()
+{
+	const FVector DashPoint{ Target->GetActorLocation() };
+
+
 }

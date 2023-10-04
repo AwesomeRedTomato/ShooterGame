@@ -265,6 +265,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))
 	bool bGroundPunch;
 
+	// TODO: Ability Cooldown
+
+
 public:
 	FORCEINLINE	bool GetAbilityQReady() const { return bGroundCollapseReady; }
 	

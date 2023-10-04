@@ -12,6 +12,7 @@ enum class EBossCombatState : uint8
 	EBCS_Unoccupied				UMETA(DisplayName = "Unoccupied"),
 	EBCS_Swing					UMETA(DisplayName = "Swing"),
 	EBCS_SoulSteal				UMETA(DisplayName = "SoulSteal"),
+	EBCS_SpeedBurst				UMETA(DisplayName = "SpeedBurst"),
 
 	EBCS_MAX					UMETA(DisplayName = "DefaultMAX")
 };
@@ -45,6 +46,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true"))
 	bool bIsOverlapCombatSphere;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true"))
+	bool bIsOverlapAgroSphere;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Swing", meta = (AllowPrivateAccess = "true"))
 	float SwingDamage;
 
@@ -54,6 +58,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Swing", meta = (AllowPrivateAccess = "true"))
 	UAnimMontage* Swing2Montage;
 	
+	// TODO: Ability Cooldown
+
+
 public:
 	UFUNCTION()
 	void AgroSphereBeginOverlap(
@@ -93,9 +100,11 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SoulSteal();
 
-
+	UFUNCTION(BlueprintCallable)
+	void SpeedBurst();
+	
 public:
 	FORCEINLINE EBossCombatState GetBossCombatState() const { return BossCombatState; }
 	FORCEINLINE void SetBossCombatState(EBossCombatState State) { BossCombatState = State; }
-
+	
 };
