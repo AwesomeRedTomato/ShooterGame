@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Enemy.h"
+#include "Components/BoxComponent.h"
 #include "Boss.generated.h"
 
 UENUM(BlueprintType)
@@ -11,8 +12,9 @@ enum class EBossCombatState : uint8
 {
 	EBCS_Unoccupied				UMETA(DisplayName = "Unoccupied"),
 	EBCS_Swing					UMETA(DisplayName = "Swing"),
-	EBCS_SoulSteal				UMETA(DisplayName = "SoulSteal"),
+	EBCS_SoulSiphon				UMETA(DisplayName = "SoulSiphon"),
 	EBCS_SpeedBurst				UMETA(DisplayName = "SpeedBurst"),
+	EBCS_Ultimate				UMETA(DisplayName = "Ultimate"),
 
 	EBCS_MAX					UMETA(DisplayName = "DefaultMAX")
 };
@@ -37,29 +39,36 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class ACharacterBase* Target;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	USphereComponent* AgroSphere;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	EBossCombatState BossCombatState;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true"))
 	bool bIsOverlapCombatSphere;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true"))
 	bool bIsOverlapAgroSphere;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Swing", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	USphereComponent* AgroSphere;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	EBossCombatState BossCombatState;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UBoxComponent* WeaponCollisionBox;
+
+	/** 기본 공격 데미지 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float SwingDamage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Swing", meta = (AllowPrivateAccess = "true"))
-	UAnimMontage* Swing1Montage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	UParticleSystem* SwingHitParticle;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Swing", meta = (AllowPrivateAccess = "true"))
-	UAnimMontage* Swing2Montage;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	float SoulSiphonDamage;
+
+	float BaseMovementSpeed;
+	float DashSpeed;
+	float DashDistance;
+
 	// TODO: Ability Cooldown
-
 
 public:
 	UFUNCTION()
@@ -92,17 +101,42 @@ public:
 		UPrimitiveComponent* OtherComp,
 		int32 OtherBodyIndex) override;
 
+	UFUNCTION()
+	void WeaponCollisionBoxBeginOverlap(
+		UPrimitiveComponent* OverlappedComponent, 
+		AActor* OtherActor, 
+		UPrimitiveComponent* OtherComp, 
+		int32 OtherBodyIndex, 
+		bool bFromSweep, 
+		const FHitResult& SweepResult);
+
+	virtual float TakeDamage(
+		float DamageAmount, 
+		struct FDamageEvent const& DamageEvent, 
+		AController* EventInstigator, 
+		AActor* DamageCauser) override;
+
+	/** 체력 바 HUD 활성화 */
+	virtual void ShowHealthBar_Implementation() override;
+
+	/** 기본 공격 */
 	UFUNCTION(BlueprintCallable)
-	void Swing1();
+	void Swing();
+	
+	/** 공격 시 무기 충돌 활성화 */
 	UFUNCTION(BlueprintCallable)
-	void Swing2();
+	void ActivateWeaponCollision();
+	
+	/** 무기 충돌 비활성화 */
+	UFUNCTION(BlueprintCallable)
+	void DeactivateWeaponCollision();
 
 	UFUNCTION(BlueprintCallable)
-	void SoulSteal();
+	void SoulSiphon();
 
 	UFUNCTION(BlueprintCallable)
 	void SpeedBurst();
-	
+
 public:
 	FORCEINLINE EBossCombatState GetBossCombatState() const { return BossCombatState; }
 	FORCEINLINE void SetBossCombatState(EBossCombatState State) { BossCombatState = State; }

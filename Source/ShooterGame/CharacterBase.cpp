@@ -639,7 +639,6 @@ void ACharacterBase::SendBullet()
 
 		if (bBeamEnd)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Beam End"));
 			// ÃÑ¾Ë Ãæµ¹ ÁöÁ¡ Particle
 			if (BeamHitResult.Actor.IsValid())
 			{
@@ -654,7 +653,6 @@ void ACharacterBase::SendBullet()
 				
 				if (HitEnemy)
 				{
-					UE_LOG(LogTemp, Warning, TEXT("Hit Enemy"));
 					int32 Damage{};
 
 					// Çìµå¼¦
@@ -684,7 +682,6 @@ void ACharacterBase::SendBullet()
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("No Hit Enemy"));
 				UGameplayStatics::SpawnEmitterAtLocation(
 					GetWorld(),
 					ImpactParticles,

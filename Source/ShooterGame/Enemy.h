@@ -59,7 +59,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent)
 	void ShowHealthBar();
-	void ShowHealthBar_Implementation();
+	virtual void ShowHealthBar_Implementation();
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void HideHealthBar();

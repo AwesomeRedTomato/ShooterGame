@@ -2,30 +2,49 @@
 
 #include "Boss.h"
 #include "CharacterBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "Engine/SkeletalMeshSocket.h"
+#include "DrawDebugHelpers.h"
+#include "Particles/ParticleSystemComponent.h"
 
 ABoss::ABoss()
 {
 	AgroSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AgroSphere"));
 	AgroSphere->SetupAttachment(GetRootComponent());
 
+	WeaponCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponCollisionBox"));
+	WeaponCollisionBox->SetupAttachment(GetMesh(), FName(TEXT("HammerCenter")));
+	
 	MaxHealth = 2000.0f;
 	Health = 2000.0;
 	
 	bIsOverlapCombatSphere = false;
 	bIsOverlapAgroSphere = false;
 
+	BossCombatState = EBossCombatState::EBCS_Unoccupied;
+
 	SwingDamage = 20.0f;
+	SoulSiphonDamage = 120.0f;
+
+	BaseMovementSpeed = 500.0f;
+	DashSpeed = 1500.0f;
+	DashDistance = 6000.0f;
+
 }
 
 void ABoss::BeginPlay()
 {
 	Super::BeginPlay();
 
+	GetCharacterMovement()->MaxWalkSpeed = BaseMovementSpeed;
+
 	AgroSphere->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 	AgroSphere->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
-
 	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &ABoss::AgroSphereBeginOverlap);
 	AgroSphere->OnComponentEndOverlap.AddDynamic(this, &ABoss::AgroSphereEndOverlap);
+
+	WeaponCollisionBox->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+	WeaponCollisionBox->OnComponentBeginOverlap.AddDynamic(this, &ABoss::WeaponCollisionBoxBeginOverlap);
 
 }
 
@@ -80,41 +99,130 @@ void ABoss::CombatSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 	}
 }
 
-void ABoss::Swing1()
+void ABoss::WeaponCollisionBoxBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
-	SetBossCombatState(EBossCombatState::EBCS_Swing);
-
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance)
+	if (OtherActor)
 	{
-		AnimInstance->Montage_Play(Swing1Montage);
-		AnimInstance->Montage_JumpToSection(FName(TEXT("Swing1")));
+		ACharacterBase* Character = Cast<ACharacterBase>(OtherActor);
+		if (Character)
+		{
+			UGameplayStatics::ApplyDamage(
+				Character,
+				SwingDamage,
+				EnemyController,
+				this,
+				UDamageType::StaticClass());
+
+			if (SwingHitParticle)
+			{
+				UGameplayStatics::SpawnEmitterAtLocation(
+					GetWorld(),
+					SwingHitParticle,
+					SweepResult.Location);
+			}
+
+			FVector LaunchVelocity = Character->GetActorForwardVector() * (-100.0f);
+			LaunchCharacter(LaunchVelocity, true, true);
+		}
 	}
 }
 
-void ABoss::Swing2()
+float ABoss::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	ShowHealthBar();
+
+	if (Health - DamageAmount <= 0.0f)
+	{
+		Health = 0.0f;
+
+		if (bIsDead) return 0;
+
+		Die();
+	}
+	else
+	{
+		Health -= DamageAmount;
+	}
+
+	return DamageAmount;
+}
+
+void ABoss::ShowHealthBar_Implementation()
+{
+	GetWorldTimerManager().ClearTimer(HealthBarTimer);
+
+	GetWorldTimerManager().SetTimer(
+		HealthBarTimer,
+		this,
+		&AEnemy::HideHealthBar,
+		HealthBarDisplayTime);
+
+}
+
+void ABoss::Swing()
 {
 	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
 	SetBossCombatState(EBossCombatState::EBCS_Swing);
-
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-	if (AnimInstance)
-	{
-		AnimInstance->Montage_Play(Swing2Montage);
-		AnimInstance->Montage_JumpToSection(FName(TEXT("Swing2")));
-	}
 }
 
-void ABoss::SoulSteal()
+void ABoss::ActivateWeaponCollision()
+{
+	WeaponCollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Overlap);
+}
+
+void ABoss::DeactivateWeaponCollision()
+{
+	WeaponCollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
+}
+
+void ABoss::SoulSiphon()
 {
 	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
-	SetBossCombatState(EBossCombatState::EBCS_SoulSteal);
+	SetBossCombatState(EBossCombatState::EBCS_SoulSiphon);
+
+	const FVector Start{ GetActorLocation() + GetActorForwardVector() * 500.0f };
+	const FVector End{ Start };
+	float Radius = 300.0f;
+
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	TEnumAsByte<EObjectTypeQuery> Pawn = UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn);
+	ObjectTypes.Add(Pawn);
+
+	TArray<AActor*> ActorsToIgnore;
+	FHitResult HitResult;
+
+	UKismetSystemLibrary::SphereTraceSingleForObjects(
+		GetWorld(),
+		Start,
+		End,
+		Radius,
+		ObjectTypes,
+		false,
+		ActorsToIgnore,
+		EDrawDebugTrace::ForDuration,
+		HitResult,
+		true);
+
+	if (HitResult.GetActor())
+	{
+		ACharacterBase* Character = Cast<ACharacterBase>(HitResult.Actor);
+		if (Character)
+		{
+			UGameplayStatics::ApplyDamage(
+				Character, 
+				SoulSiphonDamage, 
+				EnemyController, 
+				this,	
+				UDamageType::StaticClass());
+		}
+	}
 }
 
 void ABoss::SpeedBurst()
 {
-	const FVector DashPoint{ Target->GetActorLocation() };
+	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
+	SetBossCombatState(EBossCombatState::EBCS_SpeedBurst);
 
-
+	const FVector ForwardDir{ this->GetActorRotation().Vector() };
+	LaunchCharacter(ForwardDir * DashDistance, true, true);
 }
