@@ -6,6 +6,7 @@
 #include "Engine/SkeletalMeshSocket.h"
 #include "DrawDebugHelpers.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 ABoss::ABoss()
 {
@@ -15,6 +16,8 @@ ABoss::ABoss()
 	WeaponCollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("WeaponCollisionBox"));
 	WeaponCollisionBox->SetupAttachment(GetMesh(), FName(TEXT("HammerCenter")));
 	
+	bIsTarget = false;
+
 	MaxHealth = 2000.0f;
 	Health = 2000.0;
 	
@@ -51,6 +54,8 @@ void ABoss::BeginPlay()
 void ABoss::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+	
+	FocusOnTarget(DeltaTime);
 }
 
 void ABoss::AgroSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -59,6 +64,7 @@ void ABoss::AgroSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AAc
 
 	if (Target == nullptr)
 	{
+		bIsTarget = true;
 		bIsOverlapAgroSphere = true;
 		Target = Cast<ACharacterBase>(OtherActor);
 		EnemyController->GetBlackboardComponent()->SetValueAsObject("Target", Target);
@@ -69,6 +75,7 @@ void ABoss::AgroSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 {
 	if (Target)
 	{
+		bIsTarget = true;
 		bIsOverlapAgroSphere = false;
 		Target = nullptr;
 		EnemyController->GetBlackboardComponent()->SetValueAsObject("Target", Target);
@@ -121,8 +128,9 @@ void ABoss::WeaponCollisionBoxBeginOverlap(UPrimitiveComponent* OverlappedCompon
 					SweepResult.Location);
 			}
 
-			FVector LaunchVelocity = Character->GetActorForwardVector() * (-100.0f);
-			LaunchCharacter(LaunchVelocity, true, true);
+			const FVector LaunchDir{ GetActorRotation().Vector() };
+			const float LaunchDist = 3000.0f;
+			Character->LaunchCharacter(LaunchDir*LaunchDist, true, true);
 		}
 	}
 }
@@ -157,6 +165,16 @@ void ABoss::ShowHealthBar_Implementation()
 		&AEnemy::HideHealthBar,
 		HealthBarDisplayTime);
 
+}
+
+void ABoss::FocusOnTarget(float DeltaTime)
+{
+	if (Target)
+	{
+		FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), Target->GetActorLocation());
+		FRotator Rotation = UKismetMathLibrary::RInterpTo(GetActorRotation(), LookAtRotation, DeltaTime, 4.0f);
+		SetActorRotation(Rotation);
+	}
 }
 
 void ABoss::Swing()
@@ -223,6 +241,6 @@ void ABoss::SpeedBurst()
 	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
 	SetBossCombatState(EBossCombatState::EBCS_SpeedBurst);
 
-	const FVector ForwardDir{ this->GetActorRotation().Vector() };
-	LaunchCharacter(ForwardDir * DashDistance, true, true);
+	//const FVector ForwardDir{ this->GetActorRotation().Vector() };
+	//LaunchCharacter(ForwardDir * DashDistance, true, true);
 }

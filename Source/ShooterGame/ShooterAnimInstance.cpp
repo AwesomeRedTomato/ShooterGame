@@ -139,7 +139,6 @@ void UShooterAnimInstance::TurnInPlace()
 
 		const float TIPYawDelta{ TIPCharacterYaw - TIPCharacterYawLastFrame };
 
-
 		RootYawOffset = UKismetMathLibrary::NormalizeAxis(RootYawOffset - TIPYawDelta);
 
 		const float Turning{ GetCurveValue(TEXT("Turning")) };

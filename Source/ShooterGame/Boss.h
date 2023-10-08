@@ -39,6 +39,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class ACharacterBase* Target;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	bool bIsTarget;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true"))
 	bool bIsOverlapCombatSphere;
 
@@ -119,6 +122,9 @@ public:
 	/** 체력 바 HUD 활성화 */
 	virtual void ShowHealthBar_Implementation() override;
 
+	UFUNCTION(BlueprintCallable)
+	void FocusOnTarget(float DeltaTime);
+
 	/** 기본 공격 */
 	UFUNCTION(BlueprintCallable)
 	void Swing();
@@ -139,6 +145,7 @@ public:
 
 public:
 	FORCEINLINE EBossCombatState GetBossCombatState() const { return BossCombatState; }
-	FORCEINLINE void SetBossCombatState(EBossCombatState State) { BossCombatState = State; }
+	FORCEINLINE void SetBossCombatState(EBossCombatState State)  { BossCombatState = State; }
 	
+	FORCEINLINE bool GetIsTarget () const { return bIsTarget; }
 };
