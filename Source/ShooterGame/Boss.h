@@ -39,17 +39,11 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class ACharacterBase* Target;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	bool bIsTarget;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true"))
-	bool bIsOverlapCombatSphere;
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true"))
 	bool bIsOverlapAgroSphere;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	USphereComponent* AgroSphere;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Behavior Tree", meta = (AllowPrivateAccess = "true"))
+	bool bIsOverlapCombatSphere;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	EBossCombatState BossCombatState;
@@ -67,29 +61,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float SoulSiphonDamage;
 
-	float BaseMovementSpeed;
-	float DashSpeed;
-	float DashDistance;
-
-	// TODO: Ability Cooldown
-
 public:
-	UFUNCTION()
-	void AgroSphereBeginOverlap(
-		UPrimitiveComponent* OverlappedComponent,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex,
-		bool bFromSweep,
-		const FHitResult& SweepResult);
-
-	UFUNCTION()
-	void AgroSphereEndOverlap(
-		UPrimitiveComponent* OverlappedComponent,
-		AActor* OtherActor,
-		UPrimitiveComponent* OtherComp,
-		int32 OtherBodyIndex);
-
 	virtual void CombatSphereBeginOverlap(
 		UPrimitiveComponent* OverlappedComponent,
 		AActor* OtherActor,
@@ -119,11 +91,10 @@ public:
 		AController* EventInstigator, 
 		AActor* DamageCauser) override;
 
+	void TraceAgroSphere();
+
 	/** 체력 바 HUD 활성화 */
 	virtual void ShowHealthBar_Implementation() override;
-
-	UFUNCTION(BlueprintCallable)
-	void FocusOnTarget(float DeltaTime);
 
 	/** 기본 공격 */
 	UFUNCTION(BlueprintCallable)
@@ -142,10 +113,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void SpeedBurst();
-
+	
 public:
 	FORCEINLINE EBossCombatState GetBossCombatState() const { return BossCombatState; }
 	FORCEINLINE void SetBossCombatState(EBossCombatState State)  { BossCombatState = State; }
-	
-	FORCEINLINE bool GetIsTarget () const { return bIsTarget; }
 };

@@ -219,7 +219,7 @@ private:
 	float DestroyTime;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	bool bDead;
+	bool bIsDead;
 
 public:
 	FORCEINLINE bool GetAiming() const { return bAiming; }

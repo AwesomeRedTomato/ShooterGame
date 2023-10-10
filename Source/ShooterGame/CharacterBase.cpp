@@ -99,7 +99,7 @@ ACharacterBase::ACharacterBase()
 	MaxHealth = 200.0f;
 	Health = 200.0f;
 	DestroyTime = 8.0f;
-	bDead = false;
+	bIsDead = false;
 
 	bGroundCollapseReady = false;
 	GroundCallapseDamage = 120.0f;
@@ -462,7 +462,7 @@ void ACharacterBase::SetLookRates()
 
 void ACharacterBase::Die()
 {
-	bDead = true;
+	bIsDead = true;
 
 	GetMesh()->SetCollisionProfileName(TEXT("Ragdoll"));
 	GetMesh()->SetSimulatePhysics(true);

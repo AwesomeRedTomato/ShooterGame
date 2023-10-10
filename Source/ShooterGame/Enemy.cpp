@@ -165,6 +165,7 @@ void AEnemy::ShowHealthBar_Implementation()
 void AEnemy::Die()
 {
 	bIsDead = true;
+	EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("IsBossDead"), bIsDead);
 
 	HideHealthBar();
 
