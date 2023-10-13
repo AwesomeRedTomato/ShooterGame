@@ -61,23 +61,19 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float SoulSiphonDamage;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	bool bCanSwing;
-	float SwingCooldownTime;
-	FTimerHandle SwingCooldownTimer;
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	float UltimateSwingDamage;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	bool bCanSoulSiphon;
 	float SoulSiphonCooldownTime;
 	FTimerHandle SoulSiphonTimer;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	bool bCanSpeedBurst;
 	float SpeedBurstCooldownTime;
 	FTimerHandle SpeedBurstCooldownTimer;
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	bool bCanUltimate;
 	float UltimateCooldownTime;
 	FTimerHandle UltimateCooldownTimer;
 
@@ -132,6 +128,9 @@ public:
 	/** Swing */
 	UFUNCTION(BlueprintCallable)
 	void DeactivateWeaponCollision();
+
+	UFUNCTION(BlueprintCallable)
+	void Ultimate();
 
 public:
 	FORCEINLINE EBossCombatState GetBossCombatState() const { return BossCombatState; }

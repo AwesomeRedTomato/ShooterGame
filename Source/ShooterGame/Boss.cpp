@@ -21,18 +21,12 @@ ABoss::ABoss()
 	BossCombatState = EBossCombatState::EBCS_Unoccupied;
 
 	SwingDamage = 20.0f;
-	SoulSiphonDamage = 120.0f;
+	SoulSiphonDamage = 80.0f;
+	UltimateSwingDamage = 150.0f;
 
-	bCanSwing = false;
-	SwingCooldownTime = 3.0f;
-
-	bCanSoulSiphon = false;
+	// Ability cooldown time
 	SoulSiphonCooldownTime = 15.0f;
-
-	bCanSpeedBurst = false;
 	SpeedBurstCooldownTime = 10.0f;
-
-	bCanUltimate = false;
 	UltimateCooldownTime = 30.0f;
 
 }
@@ -174,8 +168,6 @@ void ABoss::Swing()
 {
 	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
 	SetBossCombatState(EBossCombatState::EBCS_Swing);
-
-	
 }
 
 void ABoss::ActivateWeaponCollision()
@@ -234,4 +226,10 @@ void ABoss::SpeedBurst()
 {
 	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
 	SetBossCombatState(EBossCombatState::EBCS_SpeedBurst);
+}
+
+void ABoss::Ultimate()
+{
+	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
+	SetBossCombatState(EBossCombatState::EBCS_Ultimate);
 }
