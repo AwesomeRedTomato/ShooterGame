@@ -61,6 +61,26 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float SoulSiphonDamage;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bCanSwing;
+	float SwingCooldownTime;
+	FTimerHandle SwingCooldownTimer;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bCanSoulSiphon;
+	float SoulSiphonCooldownTime;
+	FTimerHandle SoulSiphonTimer;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bCanSpeedBurst;
+	float SpeedBurstCooldownTime;
+	FTimerHandle SpeedBurstCooldownTimer;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bCanUltimate;
+	float UltimateCooldownTime;
+	FTimerHandle UltimateCooldownTimer;
+
 public:
 	virtual void CombatSphereBeginOverlap(
 		UPrimitiveComponent* OverlappedComponent,
@@ -96,24 +116,23 @@ public:
 	/** 체력 바 HUD 활성화 */
 	virtual void ShowHealthBar_Implementation() override;
 
-	/** 기본 공격 */
 	UFUNCTION(BlueprintCallable)
 	void Swing();
 	
-	/** 공격 시 무기 충돌 활성화 */
-	UFUNCTION(BlueprintCallable)
-	void ActivateWeaponCollision();
-	
-	/** 무기 충돌 비활성화 */
-	UFUNCTION(BlueprintCallable)
-	void DeactivateWeaponCollision();
-
 	UFUNCTION(BlueprintCallable)
 	void SoulSiphon();
 
 	UFUNCTION(BlueprintCallable)
 	void SpeedBurst();
+
+	/** Swing */
+	UFUNCTION(BlueprintCallable)
+	void ActivateWeaponCollision();
 	
+	/** Swing */
+	UFUNCTION(BlueprintCallable)
+	void DeactivateWeaponCollision();
+
 public:
 	FORCEINLINE EBossCombatState GetBossCombatState() const { return BossCombatState; }
 	FORCEINLINE void SetBossCombatState(EBossCombatState State)  { BossCombatState = State; }

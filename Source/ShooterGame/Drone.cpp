@@ -14,8 +14,11 @@ ADrone::ADrone()
 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	DroneSceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("DroneSceneComponent"));
+	DroneSceneComponent->SetupAttachment(GetRootComponent());
+
 	DroneMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("DroneMesh"));
-	DroneMesh->SetupAttachment(GetRootComponent());
+	DroneMesh->SetupAttachment(DroneSceneComponent);
 
 	Damage = 5.0f;
 	AttackRange = 800.0f;
@@ -30,6 +33,7 @@ ADrone::ADrone()
 void ADrone::BeginPlay()
 {
 	Super::BeginPlay();
+
 }
 
 // Called every frame
@@ -69,6 +73,9 @@ void ADrone::Tick(float DeltaTime)
 		if (HitResult.bBlockingHit)
 		{
 			Target = Cast<AEnemy>(HitResult.Actor);
+			
+			//FVector Direction = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), Target->GetActorLocation());
+			//SetActorRotation(Direction.Rotation());
 		}
 	}
 }

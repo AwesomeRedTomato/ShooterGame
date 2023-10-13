@@ -22,6 +22,19 @@ ABoss::ABoss()
 
 	SwingDamage = 20.0f;
 	SoulSiphonDamage = 120.0f;
+
+	bCanSwing = false;
+	SwingCooldownTime = 3.0f;
+
+	bCanSoulSiphon = false;
+	SoulSiphonCooldownTime = 15.0f;
+
+	bCanSpeedBurst = false;
+	SpeedBurstCooldownTime = 10.0f;
+
+	bCanUltimate = false;
+	UltimateCooldownTime = 30.0f;
+
 }
 
 void ABoss::BeginPlay()
@@ -161,6 +174,8 @@ void ABoss::Swing()
 {
 	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
 	SetBossCombatState(EBossCombatState::EBCS_Swing);
+
+	
 }
 
 void ABoss::ActivateWeaponCollision()
@@ -178,8 +193,7 @@ void ABoss::SoulSiphon()
 	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
 	SetBossCombatState(EBossCombatState::EBCS_SoulSiphon);
 
-	const FVector Start{ GetActorLocation() + GetActorForwardVector() * 400.0f };
-	const FVector End{ Start };
+	const FVector Center{ GetActorLocation() + GetActorForwardVector() * 400.0f };
 	float Radius = 300.0f;
 
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
@@ -191,8 +205,8 @@ void ABoss::SoulSiphon()
 
 	UKismetSystemLibrary::SphereTraceSingleForObjects(
 		GetWorld(),
-		Start,
-		End,
+		Center,
+		Center,
 		Radius,
 		ObjectTypes,
 		false,
@@ -203,14 +217,14 @@ void ABoss::SoulSiphon()
 
 	if (HitResult.GetActor())
 	{
-		ACharacterBase* Character = Cast<ACharacterBase>(HitResult.Actor);
+		ACharacterBase* Character = Cast<ACharacterBase>(HitResult.GetActor());
 		if (Character)
 		{
 			UGameplayStatics::ApplyDamage(
-				Character, 
-				SoulSiphonDamage, 
-				EnemyController, 
-				this,	
+				Target,
+				SoulSiphonDamage,
+				EnemyController,
+				this,
 				UDamageType::StaticClass());
 		}
 	}
