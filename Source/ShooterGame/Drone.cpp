@@ -73,9 +73,10 @@ void ADrone::Tick(float DeltaTime)
 		if (HitResult.bBlockingHit)
 		{
 			Target = Cast<AEnemy>(HitResult.Actor);
-			
-			//FVector Direction = UKismetMathLibrary::GetDirectionUnitVector(GetActorLocation(), Target->GetActorLocation());
-			//SetActorRotation(Direction.Rotation());
+		}
+		else
+		{
+			Target = nullptr;
 		}
 	}
 }

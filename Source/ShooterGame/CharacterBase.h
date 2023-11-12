@@ -27,7 +27,7 @@ enum class ECombatState : uint8
 	ECS_Reloading				UMETA(DisplayName = "Reloading"),
 	ECS_Equipping				UMETA(DisplayName = "Equipping"),
 	ECS_AbilityQ				UMETA(DisplayName = "AbilityQ"),
-	ECS_AbilityShift			UMETA(DisplayName = "AbilityShift"),
+	ECS_AbilityE				UMETA(DisplayName = "AbilityE"),
 
 	ECS_MAX						UMETA(DisplayName = "DefaultMAX")
 };
@@ -252,7 +252,6 @@ public:
 	void Destroy();
 	
 private:
-	/** Ability Q(Punch Ground) */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* GroundCollapseParticle;
 
@@ -265,16 +264,11 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))
 	bool bGroundPunch;
 
-	// TODO: Ability Cooldown
-
-
 public:
 	FORCEINLINE	bool GetAbilityQReady() const { return bGroundCollapseReady; }
 	
-	/** Q 버튼을 누르고 있는 동안은 준비 */
 	void Ability_Q_Ready();
 	
-	/** Q 버튼에서 떼면 재생 */
 	UFUNCTION()
 	void Ability_Q();
 
@@ -282,9 +276,12 @@ public:
 	void Attack_Q();
 
 private:
-	/** Ability Shift(Suppress) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
 	bool bIsDeploying;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
+	float DroneCooldownTime;
+	FTimerHandle DronCooldownTimer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
 	float DeployableRange;

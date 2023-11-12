@@ -568,11 +568,10 @@ void ACharacterBase::Attack_Q()
 void ACharacterBase::Ability_E_Start()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
-	if (bIsDeploying)	return;
+	if (bIsDeploying) return;
 
-	CombatState = ECombatState::ECS_AbilityShift;
+	CombatState = ECombatState::ECS_AbilityE;
 	bIsDeploying = true;
-
 
 	FHitResult HitResult;
 	bool BeamEnd = GetBeamEndLocation(GetActorLocation(), HitResult);
@@ -592,8 +591,7 @@ void ACharacterBase::Ability_E_Targeting()
 
 		if (BeamEnd)
 		{
-			FRotator Rotation{ GetActorForwardVector().RotateAngleAxis(-90.0f, GetActorForwardVector().ZAxisVector).Rotation() };
-			Drone->SetActorRotation(Rotation);
+			Drone->SetActorRotation(GetActorRotation());
 			Drone->SetActorLocation(HitResult.Location + FVector(0.0f, 0.0f, 100.0f));
 		}
 	}

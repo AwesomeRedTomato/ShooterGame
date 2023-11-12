@@ -26,9 +26,10 @@ ABoss::ABoss()
 
 	// Ability cooldown time
 	SoulSiphonCooldownTime = 15.0f;
-	SpeedBurstCooldownTime = 10.0f;
 	UltimateCooldownTime = 30.0f;
 
+	bCanSoulSiphon = true;
+	bCanUltimate = true;
 }
 
 void ABoss::BeginPlay()
@@ -183,6 +184,8 @@ void ABoss::DeactivateWeaponCollision()
 void ABoss::SoulSiphon()
 {
 	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
+	if (!bCanSoulSiphon) return;
+
 	SetBossCombatState(EBossCombatState::EBCS_SoulSiphon);
 
 	const FVector Center{ GetActorLocation() + GetActorForwardVector() * 400.0f };
@@ -220,16 +223,45 @@ void ABoss::SoulSiphon()
 				UDamageType::StaticClass());
 		}
 	}
+
+	// Cooldown
+	bCanSoulSiphon = false;
+	GetWorldTimerManager().SetTimer(
+		SoulSiphonTimer, 
+		this, 
+		&ABoss::ResetSoulSiphonCooldown, 
+		SoulSiphonCooldownTime);
 }
 
 void ABoss::SpeedBurst()
 {
 	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
 	SetBossCombatState(EBossCombatState::EBCS_SpeedBurst);
+
 }
 
 void ABoss::Ultimate()
 {
 	if (BossCombatState != EBossCombatState::EBCS_Unoccupied) return;
+	if (!bCanUltimate) return;
+
 	SetBossCombatState(EBossCombatState::EBCS_Ultimate);
+
+	// Cooldown
+	bCanUltimate = false;
+	GetWorldTimerManager().SetTimer(
+		UltimateCooldownTimer,
+		this,
+		&ABoss::ResetUltimateCooldown,
+		UltimateCooldownTime);
+}
+
+void ABoss::ResetSoulSiphonCooldown()
+{
+	bCanSoulSiphon = true;
+} 
+
+void ABoss::ResetUltimateCooldown()
+{
+	bCanUltimate = true;
 }

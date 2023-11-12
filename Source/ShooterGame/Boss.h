@@ -64,18 +64,19 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float UltimateSwingDamage;
 
+	/** Soul Siphon timer */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	bool bCanSoulSiphon;
 	float SoulSiphonCooldownTime;
 	FTimerHandle SoulSiphonTimer;
-	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
-	float SpeedBurstCooldownTime;
-	FTimerHandle SpeedBurstCooldownTimer;
+	bool bCanSoulSiphon;
 	
+	/** Ultimate timer */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	float UltimateCooldownTime;
 	FTimerHandle UltimateCooldownTimer;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	bool bCanUltimate;
 
 public:
 	virtual void CombatSphereBeginOverlap(
@@ -118,6 +119,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void SoulSiphon();
 
+
 	UFUNCTION(BlueprintCallable)
 	void SpeedBurst();
 
@@ -131,6 +133,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void Ultimate();
+
+	void ResetSoulSiphonCooldown();
+	void ResetUltimateCooldown();
 
 public:
 	FORCEINLINE EBossCombatState GetBossCombatState() const { return BossCombatState; }
