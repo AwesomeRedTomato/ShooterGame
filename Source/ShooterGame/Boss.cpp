@@ -122,7 +122,7 @@ float ABoss::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, ACo
 void ABoss::TraceAgroSphere()
 {
 	const FVector Center{ GetActorLocation() };
-	float Radius = 2500.0f;
+	float Radius = 2000.0f;
 
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
 	TEnumAsByte<EObjectTypeQuery> Pawn = UEngineTypes::ConvertToObjectType(ECollisionChannel::ECC_Pawn);
@@ -130,6 +130,8 @@ void ABoss::TraceAgroSphere()
 
 	TArray<AActor*> ActorsToIgnore;
 	FHitResult HitResult;
+
+	ACharacterBase* Character = Cast<ACharacterBase>(HitResult.Actor);
 
 	UKismetSystemLibrary::SphereTraceSingleForObjects(
 		GetWorld(),
@@ -151,6 +153,13 @@ void ABoss::TraceAgroSphere()
 	{
 		bIsOverlapAgroSphere = false;
 	}
+
+	if (Character)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("1"));
+	}
+	else
+		UE_LOG(LogTemp, Warning, TEXT("0"))
 }
 
 void ABoss::ShowHealthBar_Implementation()
