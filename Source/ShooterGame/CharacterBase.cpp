@@ -101,12 +101,18 @@ ACharacterBase::ACharacterBase()
 	DestroyTime = 8.0f;
 	bIsDead = false;
 
-	bGroundCollapseReady = false;
-	GroundCallapseDamage = 120.0f;
+	// Ability Q(Ground Collapse)
+	bGroundCollapseTargeting = false;
 	bGroundPunch = false;
+	GroundCallapseDamage = 120.0f;
+	GroundCollapseCooldownTime = 10.0f;
+	RemainGroundCollapseCooldownTime = 0.0f;
 
+	// Ability E(Drone)
 	bIsDeploying = false;
 	DeployableRange = 1000.0f;
+	DroneCooldownTime = 30.0f;
+	RemainDroneCooldownTime = 0.0f;
 }
 
 // Called when the game starts or when spawned
@@ -205,6 +211,10 @@ void ACharacterBase::Tick(float DeltaTime)
 
 	// 드론 배치
 	Ability_E_Targeting();
+
+	// 스킬 쿨타임
+	Ability_E_Cooldown(DeltaTime);
+	Ability_Q_Cooldown(DeltaTime);
 }
 
 // Called to bind functionality to input
@@ -231,12 +241,13 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	PlayerInputComponent->BindAction("1Key", EInputEvent::IE_Pressed, this, &ACharacterBase::OneKeyPressed);
 	PlayerInputComponent->BindAction("2Key", EInputEvent::IE_Pressed, this, &ACharacterBase::TwoKeyPressed);
 
-	PlayerInputComponent->BindAction("AbilityQ", EInputEvent::IE_Pressed, this, &ACharacterBase::Ability_Q_Ready);
+	PlayerInputComponent->BindAction("AbilityQ", EInputEvent::IE_Pressed, this, &ACharacterBase::Ability_Q_Targeting);
 	PlayerInputComponent->BindAction("AbilityQ", EInputEvent::IE_Released, this, &ACharacterBase::Ability_Q);
 
 	PlayerInputComponent->BindAction("AbilityE", EInputEvent::IE_Pressed, this, &ACharacterBase::Ability_E_Start);
 	PlayerInputComponent->BindAction("AbilityE", EInputEvent::IE_Released, this, &ACharacterBase::Ability_E);
 
+	PlayerInputComponent->BindAction("AbilirtShift", EInputEvent::IE_Pressed, this, &ACharacterBase::Ability_Shift_Targeting);
 
 	// Bind Axis
 	PlayerInputComponent->BindAxis("MoveForward", this, &ACharacterBase::MoveForward);
@@ -485,20 +496,24 @@ void ACharacterBase::Destroy()
 	Super::Destroy();
 }
 
-void ACharacterBase::Ability_Q_Ready()
+void ACharacterBase::Ability_Q_Targeting()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
-
+	if (RemainGroundCollapseCooldownTime > 0.0f) return;
+	
 	CombatState = ECombatState::ECS_AbilityQ;
-	bGroundCollapseReady = true;
+	bGroundCollapseTargeting = true;
+
 }
 
 void ACharacterBase::Ability_Q()
 {
-	bGroundCollapseReady = false;
+	if (CombatState != ECombatState::ECS_AbilityQ) return;
+	bGroundCollapseTargeting = false;
 	bCanMove = false;
-	bGroundPunch = true;
 
+	RemainGroundCollapseCooldownTime = GroundCollapseCooldownTime;
+	
 	SetCanMove(1.5f);
 }
 
@@ -565,6 +580,15 @@ void ACharacterBase::Attack_Q()
 	}
 }
 
+void ACharacterBase::Ability_Q_Cooldown(float DeltaTime)
+{
+	if (RemainGroundCollapseCooldownTime > 0.0f)
+	{
+		RemainGroundCollapseCooldownTime -= DeltaTime;
+	}
+	else return;
+}
+
 void ACharacterBase::Ability_E_Start()
 {
 	if (CombatState != ECombatState::ECS_Unoccupied) return;
@@ -584,7 +608,7 @@ void ACharacterBase::Ability_E_Start()
 
 void ACharacterBase::Ability_E_Targeting()
 {
-	if (Drone && bIsDeploying)
+	if (Drone && bIsDeploying && (RemainDroneCooldownTime <= 0.0f))
 	{
 		FHitResult HitResult;
 		bool BeamEnd = GetBeamEndLocation(GetActorLocation(), HitResult);
@@ -600,12 +624,30 @@ void ACharacterBase::Ability_E_Targeting()
 void ACharacterBase::Ability_E()
 {
 	CombatState = ECombatState::ECS_Unoccupied;
+	if (RemainDroneCooldownTime > 0.0f) return;
 
-	bIsDeploying = false;
+	if (bIsDeploying)
+	{
+		bIsDeploying = false;
+	}
+
 	if (Drone)
 	{
 		Drone->SetDroneTime();
+		RemainDroneCooldownTime = DroneCooldownTime;
 	}
+}
+
+void ACharacterBase::Ability_E_Cooldown(float DeltaTime)
+{
+	if (RemainDroneCooldownTime > 0.0f)
+	{
+		RemainDroneCooldownTime -= DeltaTime;
+	}
+}
+
+void ACharacterBase::Ability_Shift_Targeting()
+{
 }
 
 void ACharacterBase::PlayFireSound()

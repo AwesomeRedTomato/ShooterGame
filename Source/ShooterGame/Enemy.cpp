@@ -107,6 +107,9 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AEnemy::BulletHit_Implementation(FHitResult HitResult)
 {
+	ACharacterBase* Target = Cast<ACharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	EnemyController->GetBlackboardComponent()->SetValueAsObject(TEXT("Target"), Target);
+
 	if (ImpactSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());

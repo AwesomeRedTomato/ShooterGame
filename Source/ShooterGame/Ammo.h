@@ -10,6 +10,7 @@
 /**
  * 
  */
+
 UCLASS()
 class SHOOTERGAME_API AAmmo : public AItemBase
 {

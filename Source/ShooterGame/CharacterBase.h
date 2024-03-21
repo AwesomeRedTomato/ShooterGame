@@ -256,7 +256,7 @@ private:
 	UParticleSystem* GroundCollapseParticle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))
-	bool bGroundCollapseReady;
+	bool bGroundCollapseTargeting;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))
 	float GroundCallapseDamage;
@@ -264,16 +264,29 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))
 	bool bGroundPunch;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
+	float GroundCollapseCooldownTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
+	float RemainGroundCollapseCooldownTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
+	FTimerHandle GroundCollapseCooldownTimer;
+
 public:
-	FORCEINLINE	bool GetAbilityQReady() const { return bGroundCollapseReady; }
+	FORCEINLINE	bool GetAbilityQIsTargeting() const { return bGroundCollapseTargeting; }
 	
-	void Ability_Q_Ready();
+	// pressed key
+	void Ability_Q_Targeting();
 	
+	// released key
 	UFUNCTION()
 	void Ability_Q();
 
 	UFUNCTION(BlueprintCallable)
 	void Attack_Q();
+
+	void Ability_Q_Cooldown(float DeltaTime);
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
@@ -281,7 +294,12 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
 	float DroneCooldownTime;
-	FTimerHandle DronCooldownTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
+	float RemainDroneCooldownTime;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
+	FTimerHandle DroneCooldownTimer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | Drone", meta = (AllowPrivateAccess = "true"))
 	float DeployableRange;
@@ -294,7 +312,6 @@ private:
 
 public:
 	FORCEINLINE	bool GetStartDeploy() const { return bIsDeploying; }
-	
 	FORCEINLINE	void SetDrone(ADrone* drone) { Drone = drone; }
 
 	void Ability_E_Start();
@@ -302,7 +319,16 @@ public:
 	UFUNCTION()
 	void Ability_E_Targeting();
 	
+	UFUNCTION(BlueprintCallable)
 	void Ability_E();
+
+	void Ability_E_Cooldown(float DeltaTime);
+
+public:
+	bool bAbilityShiftTargeting;
+
+public:
+	void Ability_Shift_Targeting();
 
 private:
 	/** 십자선 퍼지는 정도 */

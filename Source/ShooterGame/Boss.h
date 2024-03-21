@@ -11,6 +11,7 @@ UENUM(BlueprintType)
 enum class EBossCombatState : uint8
 {
 	EBCS_Unoccupied				UMETA(DisplayName = "Unoccupied"),
+	EBCS_Start_Combat			UMETA(DisplayName = "StartCombat"),
 	EBCS_Swing					UMETA(DisplayName = "Swing"),
 	EBCS_SoulSiphon				UMETA(DisplayName = "SoulSiphon"),
 	EBCS_SpeedBurst				UMETA(DisplayName = "SpeedBurst"),
@@ -118,7 +119,6 @@ public:
 	
 	UFUNCTION(BlueprintCallable)
 	void SoulSiphon();
-
 
 	UFUNCTION(BlueprintCallable)
 	void SpeedBurst();

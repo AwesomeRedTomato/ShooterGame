@@ -57,7 +57,7 @@ void UShooterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 			ShooterCharacter->GetCombatState() == ECombatState::ECS_Unoccupied ||
 			ShooterCharacter->GetCombatState() ==ECombatState::ECS_FireTimerInProgress;
 
-		bAbilityQReady = ShooterCharacter->GetAbilityQReady();
+		bAbilityQReady = ShooterCharacter->GetAbilityQIsTargeting();
 		bIsDroneDeploying = ShooterCharacter->GetStartDeploy();
 
 		FVector Velocity = ShooterCharacter->GetVelocity();
