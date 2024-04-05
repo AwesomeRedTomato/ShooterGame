@@ -221,6 +221,9 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
 	bool bIsDead;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat", meta = (AllowPrivateAccess = "true"))
+	int KillEnemyCount;
+
 public:
 	FORCEINLINE bool GetAiming() const { return bAiming; }
 	FORCEINLINE ECombatState GetCombatState() const { return CombatState; }
@@ -251,6 +254,8 @@ public:
 	void Die();
 	void Destroy();
 	
+	void CountEnemy();
+
 private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat | Ability | GroundCollapse", meta = (AllowPrivateAccess = "true"))
 	UParticleSystem* GroundCollapseParticle;

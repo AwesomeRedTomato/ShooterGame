@@ -186,6 +186,9 @@ void AEnemy::Die()
 		this,
 		&AEnemy::Destroy,
 		DestroyTime);
+
+	auto Player = Cast<ACharacterBase>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	Player->CountEnemy();
 }
 
 void AEnemy::Destroy()

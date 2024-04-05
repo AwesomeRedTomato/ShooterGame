@@ -100,6 +100,7 @@ ACharacterBase::ACharacterBase()
 	Health = 200.0f;
 	DestroyTime = 8.0f;
 	bIsDead = false;
+	KillEnemyCount = 0;
 
 	// Ability Q(Ground Collapse)
 	bGroundCollapseTargeting = false;
@@ -494,6 +495,14 @@ void ACharacterBase::Die()
 void ACharacterBase::Destroy()
 {
 	Super::Destroy();
+}
+
+void ACharacterBase::CountEnemy()
+{
+	if (KillEnemyCount < 3)
+	{
+		++KillEnemyCount;
+	}
 }
 
 void ACharacterBase::Ability_Q_Targeting()
