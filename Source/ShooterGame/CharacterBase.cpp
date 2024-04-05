@@ -195,6 +195,9 @@ void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (Health <= 0.0f)
+		bIsDead = true;
+
 	// ÁÜ º¸°£
 	CameraInterpZoom(DeltaTime);
 
